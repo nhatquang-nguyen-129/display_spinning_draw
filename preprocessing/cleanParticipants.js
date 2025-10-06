@@ -1,3 +1,4 @@
+// preprocessing/cleanParticipants.js
 import fs from "fs";
 import path from "path";
 import csv from "csv-parser";
@@ -6,16 +7,15 @@ import { createObjectCsvWriter } from "csv-writer";
 const inputFile = path.join("data", "participants.csv");
 const outputFile = path.join("data", "participants_clean.csv");
 
-// Các cột trong file CSV
+// 🧩 Các cột trong file CSV — kiểm tra trùng 100% với file thật
 const phoneField = "Bố/Mẹ hãy điền Số Điện Thoại đăng ký tham gia chương trình tại đây nhé!";
 const nameField = "Hãy cho KidsPlaza biết đầy đủ Họ và Tên của Bố/Mẹ nha!";
-const urlField =
-  '"Còn bây giờ, Bố/Mẹ hãy điền link bài post tham gia Minigame  📸  NHÀ MÌNH SELFIE - NHẬN QUÀ MÊ LY"';
+const urlField = "Còn bây giờ, Bố/Mẹ hãy điền link bài post tham gia Minigame  📸  NHÀ MÌNH SELFIE - NHẬN QUÀ MÊ LY";
 
-// Regex kiểm tra URL Facebook
-const fbPattern = /^https?:\/\/(www\.)?(facebook\.com|fb\.me)\//i;
+// 🔎 Regex kiểm tra URL Facebook (đã mở rộng để nhận m.facebook.com, web.facebook.com,...)
+const fbPattern = /^https?:\/\/([a-zA-Z0-9]+\.)?(facebook\.com|fb\.me)/i;
 
-// Hàm chuẩn hóa số điện thoại
+// 📱 Chuẩn hóa số điện thoại
 function normalizePhone(phone) {
   if (!phone) return "";
   let p = phone.toString().trim().replace(/\D/g, "");
@@ -24,7 +24,7 @@ function normalizePhone(phone) {
   return p;
 }
 
-// Hàm lấy 3 số cuối SDT
+// 🔢 Lấy 3 số cuối SDT
 function last3(phone) {
   return phone ? phone.slice(-3) : "???";
 }
@@ -32,6 +32,7 @@ function last3(phone) {
 const seenPhones = new Set();
 const validRows = [];
 
+// 📂 Đọc file CSV gốc
 fs.createReadStream(inputFile)
   .pipe(csv())
   .on("data", (row) => {
@@ -46,6 +47,8 @@ fs.createReadStream(inputFile)
     validRows.push({ name, phone, url });
   })
   .on("end", async () => {
+    console.log(`📊 Đã đọc ${validRows.length} dòng hợp lệ.`);
+
     const finalData = validRows.map((r, i) => {
       const stt = String(i + 1).padStart(3, "0");
       const lastDigits = last3(r.phone);
@@ -58,6 +61,11 @@ fs.createReadStream(inputFile)
         Hiển_Thị: display,
       };
     });
+
+    if (finalData.length === 0) {
+      console.error("❌ Không có dữ liệu hợp lệ. Kiểm tra tên cột hoặc URL Facebook.");
+      return;
+    }
 
     const csvWriter = createObjectCsvWriter({
       path: outputFile,

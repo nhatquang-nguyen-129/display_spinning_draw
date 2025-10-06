@@ -35,7 +35,7 @@ function startServer(port) {
  */
 app.get("/spin", (req, res) => {
   const results = [];
-  const filePath = "./data/participants.csv";
+  const filePath = "./data/participants_clean.csv";
 
   // Kiểm tra tồn tại
   if (!fs.existsSync(filePath)) {
