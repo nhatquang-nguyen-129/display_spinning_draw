@@ -6,30 +6,58 @@
   <link rel="stylesheet" href="style.css">
 </head>
 <body>
+  <!-- 🖼 Banner chương trình -->
   <img src="banner.png" alt="Banner chương trình" class="banner">
 
   <h1>QUAY SỐ MAY MẮN</h1>
 
+  <!-- Vùng hiển thị kết quả -->
   <div class="lucky-number" id="result">???</div>
 
+  <!-- Nút bấm bắt đầu quay -->
   <button onclick="spin()">🎯 Quay số</button>
 
   <script>
+    /**
+     * Hàm chính điều khiển quá trình quay số
+     * Gồm 3 bước:
+     *  1️⃣ Tạo hiệu ứng quay (hiển thị SĐT ngẫu nhiên)
+     *  2️⃣ Gọi API server để lấy kết quả thật
+     *  3️⃣ Hiển thị người thắng sau một khoảng delay
+     */
     async function spin() {
       const resultDiv = document.getElementById("result");
+
+      // 1️⃣ Lấy danh sách SĐT từ server (dạng JSON)
+      const resList = await fetch("/participants");
+      const participants = await resList.json();
+
+      // 2️⃣ Hiển thị hiệu ứng "đang quay"
       resultDiv.innerText = "Đang quay...";
-      
-      // hiệu ứng chờ
+
       let counter = 0;
       const interval = setInterval(() => {
-        resultDiv.innerText = Math.floor(Math.random() * 999999);
+        // Chọn ngẫu nhiên 1 người trong danh sách
+        const random = participants[Math.floor(Math.random() * participants.length)];
+        const phone = random.phone;
+
+        // Ẩn bớt số cho bảo mật, ví dụ: 09*****123
+        const masked =
+          phone.slice(0, 2) + "*****" + phone.slice(-3);
+
+        // Cập nhật lên màn hình
+        resultDiv.innerText = masked;
+
+        // Lặp lại 15 lần (~1.5 giây)
         counter++;
-        if (counter > 10) clearInterval(interval);
+        if (counter > 15) clearInterval(interval);
       }, 100);
 
-      // gọi server lấy số thực
+      // 3️⃣ Gọi API chính để lấy người thắng
       const res = await fetch("/spin");
       const data = await res.json();
+
+      // 4️⃣ Hiển thị kết quả thật sau 1.5 giây
       setTimeout(() => {
         resultDiv.innerText = data.result;
       }, 1500);
