@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <title>Quay số may mắn</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <img src="banner.png" alt="Banner chương trình" class="banner">
+
+  <h1>QUAY SỐ MAY MẮN</h1>
+
+  <div class="lucky-number" id="result">???</div>
+
+  <button onclick="spin()">🎯 Quay số</button>
+
+  <script>
+    async function spin() {
+      const resultDiv = document.getElementById("result");
+      resultDiv.innerText = "Đang quay...";
+      
+      // hiệu ứng chờ
+      let counter = 0;
+      const interval = setInterval(() => {
+        resultDiv.innerText = Math.floor(Math.random() * 999999);
+        counter++;
+        if (counter > 10) clearInterval(interval);
+      }, 100);
+
+      // gọi server lấy số thực
+      const res = await fetch("/spin");
+      const data = await res.json();
+      setTimeout(() => {
+        resultDiv.innerText = data.result;
+      }, 1500);
+    }
+  </script>
+</body>
+</html>
