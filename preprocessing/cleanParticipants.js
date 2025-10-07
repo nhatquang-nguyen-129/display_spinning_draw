@@ -29,6 +29,17 @@ function last3(phone) {
   return phone ? phone.slice(-3) : "???";
 }
 
+// 🔧 Chuyển chuỗi sang Title Case
+function toTitleCase(str) {
+  if (!str) return "";
+  return str
+    .toLowerCase()
+    .split(" ")
+    .filter(Boolean)
+    .map((w) => w[0].toUpperCase() + w.slice(1))
+    .join(" ");
+}
+
 const seenPhones = new Set();
 const validRows = [];
 
@@ -54,9 +65,10 @@ fs.createReadStream(inputFile)
     const finalData = validRows.map((r, i) => {
       const stt = String(i + 1).padStart(3, "0");
       const lastDigits = last3(r.phone);
+      const nameTitleCase = toTitleCase(r.name); // ✅ chuyển sang Title Case
       return {
         STT: stt,
-        Ho_Ten: r.name,
+        Ho_Ten: nameTitleCase,
         So_Dien_Thoai: r.phone,
         Ba_So_Cuoi: lastDigits,
         Bai_Dang: r.url,

@@ -13,7 +13,7 @@
       height: 100vh;
       display: flex;
       flex-direction: column;
-      justify-content: center; /* căn dọc giữa */
+      justify-content: center;
       align-items: center;
     }
 
@@ -36,7 +36,7 @@
     }
 
     h1 {
-      font-size: 2.3rem;
+      font-size: 3.0rem;
       color: #ffcc00;
       letter-spacing: 2px;
       text-shadow: 0 0 8px #000;
@@ -113,7 +113,7 @@
 
     .winner .highlight-name {
       color: #00ffcc;
-      font-size: 4.5rem;
+      font-size: 4.0rem;
       font-weight: 900;
     }
 
@@ -159,7 +159,7 @@
 
   <canvas id="fireworks-container"></canvas>
 
-  <h1>🎯 QUAY SỐ MAY MẮN 🎯</h1>
+  <h1>🎯 VÒNG QUAY SĐT MAY MẮN 🎯</h1>
 
   <div class="flip-container">
     <div class="digit-box"><div class="digit-inner" id="inner1"><div class="digit-item">-</div></div></div>
@@ -179,14 +179,16 @@
 
   <script>
     // ======== PHÁO HOA ========
+    let fireworksAnimationId; // <-- biến toàn cục để dừng animation
+    let fireworks = [];
+    let particles = [];
+
     function showFireworks(durationMs = 10000) {
       const canvas = document.getElementById("fireworks-container");
       const ctx = canvas.getContext("2d");
       canvas.width = window.innerWidth;
       canvas.height = window.innerHeight;
 
-      const fireworks = [];
-      const particles = [];
       const colors = ["#ff00ff","#ffd700","#00ffff","#ff4500","#7fffd4","#ffffff","#ff1493","#ffa500"];
       const endTime = Date.now() + durationMs;
 
@@ -253,7 +255,7 @@
             for (let i = 0; i < burstCount; i++) spawnFirework();
             if (Math.random() < 0.3) spawnFirework(true);
           }
-          requestAnimationFrame(animate);
+          fireworksAnimationId = requestAnimationFrame(animate);
         }
       }
 
@@ -308,7 +310,21 @@
       const winnerDiv = document.getElementById('winner');
       const noteDiv = document.getElementById('note');
       const innerEls = [document.getElementById('inner1'), document.getElementById('inner2'), document.getElementById('inner3')];
+      const video = document.getElementById('bg-video');
+      const canvas = document.getElementById("fireworks-container");
+      const ctx = canvas.getContext("2d");
 
+      // --- DỪNG NGAY PHÁO HOA NẾU ĐANG CHẠY ---
+      if (fireworksAnimationId) cancelAnimationFrame(fireworksAnimationId);
+      fireworks = [];
+      particles = [];
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+      // --- reset video về đầu ---
+      video.currentTime = 0;
+      video.play();
+
+      // --- reset hiển thị ---
       ['part1','part2','part3'].forEach(id=>{
         const el=document.getElementById(id);
         el.style.opacity=0; el.style.transform='translateY(20px)';
@@ -334,7 +350,6 @@
         const part3=document.getElementById('part3');
 
         part1.style.opacity = 1; part1.style.transform = 'translateY(0)';
-
         setTimeout(()=>{ part2.textContent = hoTen; part2.style.opacity = 1; part2.style.transform = 'translateY(0)'; }, 500);
         setTimeout(()=>{ part3.style.opacity = 1; part3.style.transform = 'translateY(0)'; }, 1000);
 
