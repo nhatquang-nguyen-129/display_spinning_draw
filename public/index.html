@@ -2,61 +2,150 @@
 <html lang="vi">
 <head>
   <meta charset="UTF-8">
-  <title>Quay số may mắn</title>
-  <link rel="stylesheet" href="style.css">
+  <title>🎯 Quay số may mắn 🎯</title>
   <style>
     body {
       margin: 0;
-      text-align: center;
       font-family: 'Segoe UI', sans-serif;
       background-color: #000;
       color: #fff;
       overflow: hidden;
-    }
-    .banner {
-      width: 100%;
-      height: auto;
-    }
-    h1 {
-      margin-top: 10px;
-      font-size: 2rem;
-      color: #ffcc00;
-      letter-spacing: 2px;
-    }
-    .display-area {
-      margin-top: 60px;
+      height: 100vh;
       display: flex;
       flex-direction: column;
+      justify-content: center; /* căn dọc giữa */
       align-items: center;
-      gap: 20px;
     }
-    .stt {
-      font-size: 2rem;
-      opacity: 0;
-      transition: opacity 0.8s ease;
+
+    #bg-video {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      z-index: -3;
+      opacity: 0.4;
     }
-    .phone {
-      font-size: 3rem;
-      opacity: 0;
-      transition: opacity 0.8s ease;
+
+    #fireworks-container {
+      position: fixed;
+      inset: 0;
+      z-index: -2;
+      pointer-events: none;
     }
+
+    h1 {
+      font-size: 2.3rem;
+      color: #ffcc00;
+      letter-spacing: 2px;
+      text-shadow: 0 0 8px #000;
+      margin: 0;
+      margin-bottom: 40px;
+    }
+
+    .flip-container {
+      display: flex;
+      gap: 16px;
+      justify-content: center;
+      align-items: center;
+      margin-bottom: 40px;
+    }
+
+    .digit-box {
+      width: 144px;
+      height: 192px;
+      background: #fff;
+      color: #000;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      font-size: 8.0rem;
+      font-weight: 900;
+      border-radius: 14px;
+      box-shadow: 0 6px 22px rgba(0,0,0,0.5);
+      position: relative;
+      overflow: hidden;
+    }
+
+    .digit-inner { position: absolute; inset: 0; overflow: hidden; }
+
+    .digit-item {
+      position: absolute;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transform: translateY(0);
+    }
+
+    @keyframes bounce {
+      0% { transform: translateY(0); }
+      30% { transform: translateY(-15%); }
+      60% { transform: translateY(5%); }
+      100% { transform: translateY(0); }
+    }
+
+    .bounce { animation: bounce 0.4s ease-out; }
+
     .winner {
-      font-size: 4rem;
-      font-weight: bold;
+      font-size: 3.0rem;
+      font-weight: 700;
       color: #ff6600;
-      opacity: 0;
-      transition: opacity 0.8s ease;
+      text-shadow: 0 0 12px #000;
+      display: flex;
+      justify-content: center;
+      align-items: baseline;
+      flex-wrap: wrap;
+      margin-bottom: 60px;
     }
-    button {
-      margin-top: 40px;
+
+    .winner span {
+      opacity: 0;
+      transform: translateY(20px);
+      display: inline-block;
+      transition: opacity 0.6s ease, transform 0.6s ease, font-size 0.3s ease;
+      font-size: inherit;
+      margin: 0 6px;
+    }
+
+    .winner .highlight-name {
+      color: #00ffcc;
+      font-size: 4.5rem;
+      font-weight: 900;
+    }
+
+    .note {
+      margin-top: 12px;
       font-size: 1.5rem;
-      padding: 15px 40px;
-      border-radius: 12px;
+      opacity: 1.0;
+      color: #ccc;
+    }
+
+    button {
+      position: fixed;
+      bottom: 40px;
+      left: 50%;
+      transform: translateX(-50%);
+      font-size: 1.2rem;
+      padding: 12px 34px;
+      border-radius: 11px;
       border: none;
       background: #ff6600;
       color: white;
       cursor: pointer;
+      transition: 0.3s ease;
+      display: inline-block;
+      width: auto;
     }
+
+    button:hover:not(:disabled) {
+      background: #ff7f2a;
+      transform: translateX(-50%) scale(1.08);
+    }
+
     button:disabled {
       opacity: 0.6;
       cursor: not-allowed;
@@ -64,79 +153,195 @@
   </style>
 </head>
 <body>
-  <!-- 🖼 Banner chương trình -->
-  <img src="banner.png" alt="Banner chương trình" class="banner">
+  <video id="bg-video" autoplay muted loop playsinline>
+    <source src="background.mp4" type="video/mp4">
+  </video>
+
+  <canvas id="fireworks-container"></canvas>
 
   <h1>🎯 QUAY SỐ MAY MẮN 🎯</h1>
 
-  <!-- Vùng hiển thị kết quả -->
-  <div class="display-area">
-    <div id="stt" class="stt">---</div>
-    <div id="phone" class="phone">-----</div>
-    <div id="winner" class="winner">---</div>
+  <div class="flip-container">
+    <div class="digit-box"><div class="digit-inner" id="inner1"><div class="digit-item">-</div></div></div>
+    <div class="digit-box"><div class="digit-inner" id="inner2"><div class="digit-item">-</div></div></div>
+    <div class="digit-box"><div class="digit-inner" id="inner3"><div class="digit-item">-</div></div></div>
   </div>
 
-  <!-- Nút bấm bắt đầu quay -->
-  <button onclick="spin()">BẮT ĐẦU QUAY</button>
+  <div id="winner" class="winner">
+    <span id="part1">🎉 Chúc mừng Mẹ </span>
+    <span id="part2" class="highlight-name"></span>
+    <span id="part3"> đã trúng thưởng! 🎉</span>
+  </div>
+
+  <div id="note" class="note"></div>
+
+  <button id="spinBtn" onclick="spin()">BẮT ĐẦU QUAY</button>
 
   <script>
-    /**
-     * Hàm chính điều khiển quá trình quay số
-     * Trình tự:
-     *  1️⃣ Lấy danh sách người tham gia
-     *  2️⃣ Hiển thị hiệu ứng quay ngẫu nhiên SĐT
-     *  3️⃣ Gọi API /spin để lấy người trúng thật
-     *  4️⃣ Hiển thị STT → SĐT → Tên theo thứ tự
-     */
+    // ======== PHÁO HOA ========
+    function showFireworks(durationMs = 10000) {
+      const canvas = document.getElementById("fireworks-container");
+      const ctx = canvas.getContext("2d");
+      canvas.width = window.innerWidth;
+      canvas.height = window.innerHeight;
+
+      const fireworks = [];
+      const particles = [];
+      const colors = ["#ff00ff","#ffd700","#00ffff","#ff4500","#7fffd4","#ffffff","#ff1493","#ffa500"];
+      const endTime = Date.now() + durationMs;
+
+      function spawnFirework(extra=false) {
+        const startX = canvas.width / 2 + (Math.random() - 0.5) * 400;
+        const startY = canvas.height + 10;
+        const side = Math.random() < 0.5 ? 1 : -1;
+        const angle = Math.PI / 2 + side * (Math.random() * Math.PI / 4);
+        const speed = 14 + Math.random() * 3 + (extra ? 4 : 0);
+        const color = colors[Math.floor(Math.random() * colors.length)];
+        fireworks.push({ x: startX, y: startY, vx: Math.cos(angle) * speed, vy: -Math.abs(Math.sin(angle) * speed), color, exploded: false, alpha: 1, tail: [] });
+      }
+
+      function explode(x, y, color) {
+        const numParticles = 35 + Math.floor(Math.random() * 15);
+        for (let i = 0; i < numParticles; i++) {
+          const angle = (i / numParticles) * 2 * Math.PI;
+          const speed = 2 + Math.random() * 3;
+          particles.push({ x, y, vx: Math.cos(angle) * speed, vy: Math.sin(angle) * speed, color, alpha: 1, life: 80 + Math.random() * 40, radius: 1.5 + Math.random() * 1.5 });
+        }
+      }
+
+      function animate() {
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+        fireworks.forEach(f => {
+          f.tail.push({ x: f.x, y: f.y });
+          if (f.tail.length > 5) f.tail.shift();
+          f.x += f.vx; f.y += f.vy; f.vy += 0.15; f.alpha -= 0.0045;
+
+          ctx.globalCompositeOperation = "lighter";
+          ctx.strokeStyle = f.color; ctx.lineWidth = 2; ctx.beginPath();
+          for (let i = 0; i < f.tail.length - 1; i++) {
+            ctx.globalAlpha = i / f.tail.length;
+            ctx.moveTo(f.tail[i].x, f.tail[i].y); ctx.lineTo(f.tail[i + 1].x, f.tail[i + 1].y);
+          }
+          ctx.stroke();
+
+          ctx.globalAlpha = f.alpha; ctx.fillStyle = f.color; ctx.shadowBlur = 6; ctx.shadowColor = f.color;
+          ctx.beginPath(); ctx.arc(f.x, f.y, 4, 0, 2 * Math.PI); ctx.fill();
+          ctx.shadowBlur = 0; ctx.globalCompositeOperation = "source-over";
+
+          if (f.vy >= 0 && !f.exploded) { f.exploded = true; explode(f.x, f.y, f.color); }
+        });
+
+        for (let i = fireworks.length - 1; i >= 0; i--) {
+          if (fireworks[i].exploded || fireworks[i].alpha <= 0) fireworks.splice(i, 1);
+        }
+
+        particles.forEach(p => {
+          p.x += p.vx; p.y += p.vy; p.vy += 0.07; p.alpha -= 0.013; p.life -= 1;
+          ctx.globalCompositeOperation = "lighter"; ctx.globalAlpha = Math.max(p.alpha, 0); ctx.fillStyle = p.color;
+          ctx.shadowBlur = 4; ctx.shadowColor = p.color; ctx.beginPath(); ctx.arc(p.x, p.y, p.radius, 0, 2 * Math.PI); ctx.fill();
+          ctx.shadowBlur = 0; ctx.globalCompositeOperation = "source-over";
+        });
+
+        for (let i = particles.length - 1; i >= 0; i--) {
+          if (particles[i].alpha <= 0 || particles[i].life <= 0) particles.splice(i, 1);
+        }
+
+        if (Date.now() < endTime || particles.length > 0 || fireworks.length > 0) {
+          if (Date.now() < endTime && Math.random() < 0.04) {
+            const burstCount = 3 + Math.floor(Math.random() * 2);
+            for (let i = 0; i < burstCount; i++) spawnFirework();
+            if (Math.random() < 0.3) spawnFirework(true);
+          }
+          requestAnimationFrame(animate);
+        }
+      }
+
+      animate();
+    }
+
+    // ======== SLIDE SỐ & HIỂN THỊ WINNER ========
+    async function slideOnce(innerEl, nextNum, durationMs = 80) {
+      return new Promise(resolve => {
+        const curr = innerEl.querySelector('.digit-item');
+        const next = document.createElement('div');
+        next.className = 'digit-item'; next.textContent = nextNum; next.style.transform = 'translateY(-100%)';
+        const ms = Math.max(40, Math.min(400, Math.round(durationMs)));
+        curr.style.transition = `transform ${ms}ms linear`; next.style.transition = `transform ${ms}ms linear`;
+        innerEl.appendChild(next); next.getBoundingClientRect();
+        requestAnimationFrame(() => { curr.style.transform = 'translateY(100%)'; next.style.transform = 'translateY(0)'; });
+        const cleanup = () => { innerEl.removeChild(curr); next.style.transition=''; next.style.transform=''; resolve(next); };
+        next.addEventListener('transitionend', cleanup, { once: true });
+        setTimeout(cleanup, ms + 50);
+      });
+    }
+
+    async function rollDigitSliding(innerEl, finalNum, totalDuration = 3000) {
+      const initialDelay = 20; const maxDelay = 280;
+      const steps = Math.max(8, Math.floor(totalDuration / 80));
+      for (let i = 0; i < steps; i++){
+        const progress = i / Math.max(1, steps - 1);
+        const eased = 1 / (1 + Math.exp(-10 * (progress - 0.8)));
+        const delay = initialDelay + eased * (maxDelay - initialDelay);
+        const rnd = Math.floor(Math.random() * 10);
+        await slideOnce(innerEl, rnd, delay);
+      }
+      const finalEl = await slideOnce(innerEl, finalNum, Math.min(maxDelay, 450));
+      finalEl.classList.add('bounce');
+      setTimeout(()=>finalEl.classList.remove('bounce'),500);
+    }
+
+    // ======== GỌI API SERVER /spin ========
+    async function getSpinData() {
+      try {
+        const resp = await fetch('/spin');
+        const data = await resp.json();
+        return data;
+      } catch(err) {
+        console.error("Lỗi lấy dữ liệu spin:", err);
+        return { stt: 999, hoTen: "Nguyễn Thị Lan", baSoCuoi: "123" };
+      }
+    }
+
     async function spin() {
-      const btn = document.querySelector("button");
-      const sttDiv = document.getElementById("stt");
-      const phoneDiv = document.getElementById("phone");
-      const winnerDiv = document.getElementById("winner");
+      const btn = document.getElementById('spinBtn');
+      const winnerDiv = document.getElementById('winner');
+      const noteDiv = document.getElementById('note');
+      const innerEls = [document.getElementById('inner1'), document.getElementById('inner2'), document.getElementById('inner3')];
 
-      btn.disabled = true;
-      btn.innerText = "🎲 ĐANG QUAY...";
+      ['part1','part2','part3'].forEach(id=>{
+        const el=document.getElementById(id);
+        el.style.opacity=0; el.style.transform='translateY(20px)';
+      });
+      noteDiv.style.opacity=0; noteDiv.innerText='';
 
-      // 1️⃣ Lấy danh sách từ server
-      const resList = await fetch("/participants");
-      const participants = await resList.json();
+      btn.disabled=true; btn.innerText='🎲 ĐANG QUAY...';
+      winnerDiv.style.opacity=1;
+      innerEls.forEach(e=>e.innerHTML=`<div class="digit-item">-</div>`);
 
-      // 2️⃣ Hiệu ứng quay số: random SĐT chạy liên tục
-      let counter = 0;
-      const interval = setInterval(() => {
-        const random = participants[Math.floor(Math.random() * participants.length)];
-        const masked = random.phone.slice(0, 2) + "*****" + random.phone.slice(-3);
-        phoneDiv.innerText = masked;
-        counter++;
-        if (counter > 15) clearInterval(interval);
-      }, 100);
+      const data = await getSpinData();
+      const { stt, hoTen, baSoCuoi } = data;
+      const arr = baSoCuoi.split('').map(c => c || '0');
 
-      // 3️⃣ Gọi API kết quả thật
-      const res = await fetch("/spin");
-      const data = await res.json();
-      const { stt, phone, name } = data.result; // { stt: "001", phone: "*893", name: "Mai Anh" }
+      for(let i=0;i<arr.length;i++){
+        await rollDigitSliding(innerEls[i], arr[i], 2500+i*400);
+      }
 
-      // 4️⃣ Hiệu ứng hiển thị tuần tự
-      sttDiv.style.opacity = 0;
-      phoneDiv.style.opacity = 0;
-      winnerDiv.style.opacity = 0;
+      setTimeout(()=>{
+        showFireworks();
+        const part1=document.getElementById('part1');
+        const part2=document.getElementById('part2');
+        const part3=document.getElementById('part3');
 
-      setTimeout(() => {
-        sttDiv.innerText = stt;
-        sttDiv.style.opacity = 1;
-      }, 1000);
+        part1.style.opacity = 1; part1.style.transform = 'translateY(0)';
 
-      setTimeout(() => {
-        phoneDiv.innerText = phone;
-        phoneDiv.style.opacity = 1;
-      }, 2000);
+        setTimeout(()=>{ part2.textContent = hoTen; part2.style.opacity = 1; part2.style.transform = 'translateY(0)'; }, 500);
+        setTimeout(()=>{ part3.style.opacity = 1; part3.style.transform = 'translateY(0)'; }, 1000);
 
-      setTimeout(() => {
-        winnerDiv.innerText = `🎉 Chúc mừng ${name}! 🎉`;
-        winnerDiv.style.opacity = 1;
-        btn.disabled = false;
-        btn.innerText = "QUAY LẠI";
-      }, 3000);
+        noteDiv.innerText=`(STT: ${stt})`; noteDiv.style.opacity=0.9;
+      },1000);
+
+      btn.disabled=false; btn.innerText='QUAY LẠI';
     }
   </script>
 </body>

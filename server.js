@@ -8,12 +8,8 @@ dotenv.config();
 const app = express();
 app.use(express.static("public"));
 
-// Đọc port từ .env, nếu không có thì dùng 3000
 const DEFAULT_PORT = process.env.PORT ? parseInt(process.env.PORT, 10) : 3000;
 
-/**
- * Hàm chọn port khả dụng
- */
 function startServer(port) {
   const server = app
     .listen(port, () => {
@@ -29,35 +25,45 @@ function startServer(port) {
     });
 }
 
-/**
- * API: /spin
- * Trả về ngẫu nhiên 1 dòng trong file participants.csv
- */
+/** 📜 Lấy toàn bộ danh sách (phục vụ hiệu ứng quay giả) */
+app.get("/participants", (req, res) => {
+  const results = [];
+  const filePath = "./data/participants_clean.csv";
+  if (!fs.existsSync(filePath)) return res.json([]);
+
+  fs.createReadStream(filePath)
+    .pipe(csv())
+    .on("data", (row) => {
+      results.push({
+        stt: row["STT"],
+        hoTen: row["Ho_Ten"],        // 👈 sửa thành Ho_Ten
+        baSoCuoi: row["Ba_So_Cuoi"],
+      });
+    })
+    .on("end", () => res.json(results));
+});
+
+/** 🎲 Quay thật — random 1 người hợp lệ */
 app.get("/spin", (req, res) => {
   const results = [];
   const filePath = "./data/participants_clean.csv";
-
-  // Kiểm tra tồn tại
   if (!fs.existsSync(filePath)) {
-    return res.json({ result: "❌ Không tìm thấy file participants.csv" });
+    return res.status(404).json({ error: "Không tìm thấy file dữ liệu!" });
   }
 
   fs.createReadStream(filePath)
     .pipe(csv())
     .on("data", (row) => results.push(row))
     .on("end", () => {
-      if (results.length === 0) return res.json({ result: "Không có dữ liệu" });
+      if (!results.length) return res.json({ error: "Không có dữ liệu" });
       const random = results[Math.floor(Math.random() * results.length)];
 
-      // Giả sử trường điện thoại là cột thứ 3
-      const phone =
-        random[
-          "Bố/Mẹ hãy điền Số Điện Thoại đăng ký tham gia chương trình tại đây nhé!"
-        ] || "Không có SĐT";
-
-      res.json({ result: phone });
+      res.json({
+        stt: random["STT"],
+        hoTen: random["Ho_Ten"],     // 👈 sửa thành Ho_Ten
+        baSoCuoi: random["Ba_So_Cuoi"],
+      });
     });
 });
 
-// Khởi động server
 startServer(DEFAULT_PORT);
