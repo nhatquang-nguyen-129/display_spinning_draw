@@ -6,16 +6,15 @@ import { createObjectCsvWriter } from "csv-writer";
 const inputFile = path.join("data", "participants.csv");
 const outputFile = path.join("data", "participants_clean.csv");
 
-// 🧩 Cột gốc trong file CSV
-const nameField = "Hãy cho KidsPlaza biết đầy đủ Họ và Tên của Bố/Mẹ nha!";
-const phoneField = "Bố/Mẹ hãy điền Số Điện Thoại đăng ký tham gia chương trình tại đây nhé!";
-const urlField =
-  "Còn bây giờ, Bố/Mẹ hãy điền link bài post tham gia Minigame  📸  NHÀ MÌNH SELFIE - NHẬN QUÀ MÊ LY";
+// 🧩 Original column names in the input CSV
+const nameField = "Full Name";
+const phoneField = "Phone Number";
+const urlField = "Facebook Post";
 
-// ✅ Regex linh hoạt cho URL Facebook
+// ✅ Flexible Facebook URL pattern
 const fbPattern = /(facebook\.com|fb\.me)/i;
 
-// 🔧 Hàm chuẩn hóa số điện thoại
+// 🔧 Normalize phone number format
 function normalizePhone(phone) {
   if (!phone) return "";
   let p = phone.toString().trim().replace(/\D/g, "");
@@ -24,12 +23,12 @@ function normalizePhone(phone) {
   return p;
 }
 
-// 🔧 Lấy 3 số cuối
+// 🔧 Get last 3 digits of phone number
 function last3(phone) {
   return phone ? phone.slice(-3) : "???";
 }
 
-// 🔧 Chuyển chuỗi sang Title Case
+// 🔧 Convert string to Title Case
 function toTitleCase(str) {
   if (!str) return "";
   return str
@@ -40,10 +39,9 @@ function toTitleCase(str) {
     .join(" ");
 }
 
-const seenPhones = new Set();
-const validRows = [];
+// Temporary array to hold all rows
+const allRows = [];
 
-// 🚀 Đọc file gốc và lọc dữ liệu hợp lệ
 fs.createReadStream(inputFile)
   .pipe(csv())
   .on("data", (row) => {
@@ -51,21 +49,36 @@ fs.createReadStream(inputFile)
     const phone = normalizePhone(row[phoneField]);
     const url = row[urlField]?.trim();
 
-    if (!phone || seenPhones.has(phone) || !url || !fbPattern.test(url)) return;
-    seenPhones.add(phone);
+    // ✅ Skip invalid rows early
+    if (!phone || !url || !fbPattern.test(url)) return;
 
-    validRows.push({ name, phone, url });
+    allRows.push({ name, phone, url });
   })
   .on("end", async () => {
-    if (validRows.length === 0) {
-      console.warn("⚠️ Không có dòng hợp lệ nào để ghi ra file!");
+    if (allRows.length === 0) {
+      console.warn("⚠️ Không có dòng hợp lệ nào để xử lý!");
       return;
     }
 
+    // 🧹 Step 1: Remove duplicate phone numbers
+    const uniqueMap = new Map();
+    const duplicates = []; // ✅ store duplicates for logging
+
+    for (const row of allRows) {
+      if (!uniqueMap.has(row.phone)) {
+        uniqueMap.set(row.phone, row);
+      } else {
+        duplicates.push(row); // duplicate found → save for reporting
+      }
+    }
+
+    const validRows = Array.from(uniqueMap.values());
+
+    // 🧾 Step 2: Prepare final output
     const finalData = validRows.map((r, i) => {
       const stt = String(i + 1).padStart(3, "0");
       const lastDigits = last3(r.phone);
-      const nameTitleCase = toTitleCase(r.name); // ✅ chuyển sang Title Case
+      const nameTitleCase = toTitleCase(r.name);
       return {
         STT: stt,
         Ho_Ten: nameTitleCase,
@@ -75,6 +88,7 @@ fs.createReadStream(inputFile)
       };
     });
 
+    // ✍️ Step 3: Write to CSV file
     const csvWriter = createObjectCsvWriter({
       path: outputFile,
       header: Object.keys(finalData[0]).map((key) => ({
@@ -84,11 +98,21 @@ fs.createReadStream(inputFile)
     });
 
     await csvWriter.writeRecords(finalData);
-    console.log(`✅ Xử lý xong ${finalData.length} người hợp lệ. File: ${outputFile}`);
 
-    // Log ra console cho dễ test
-    finalData.slice(0, 10).forEach((p) =>
-      console.log(`${p.STT} | ${p.Ho_Ten} | ${p.Ba_So_Cuoi}`)
-    );
+    // ✅ Print summary
+    console.log(`✅ Giữ lại ${finalData.length} người hợp lệ (đã loại ${duplicates.length} bản trùng).`);
+    console.log(`📄 File output: ${outputFile}`);
+
+    // 🔍 Print duplicates summary
+    if (duplicates.length > 0) {
+      console.log("\n⚠️ Các bản bị loại do trùng số điện thoại:");
+      duplicates.forEach((d, idx) => {
+        console.log(
+          `${String(idx + 1).padStart(3, "0")} | ${toTitleCase(d.name)} | ${d.phone}`
+        );
+      });
+    } else {
+      console.log("\n✅ Không có bản trùng nào bị loại.");
+    }
   })
   .on("error", (err) => console.error("❌ Lỗi đọc file:", err.message));
