@@ -4,6 +4,8 @@
   <meta charset="UTF-8">
   <title>🎯 Quay số may mắn 🎯</title>
   <style>
+
+/* 1. GENERAL PAGE STYLING */
     body {
       margin: 0;
       font-family: 'Segoe UI', sans-serif;
@@ -17,6 +19,7 @@
       align-items: center;
     }
 
+  /* 1.1. Background video */
     #bg-video {
       position: fixed;
       top: 0;
@@ -25,9 +28,10 @@
       height: 100%;
       object-fit: cover;
       z-index: -3;
-      opacity: 0.4;
+      opacity: 1; /* 🔆 Brightened background video */
     }
 
+  /* 1.2. Canvas for fireworks effect */
     #fireworks-container {
       position: fixed;
       inset: 0;
@@ -35,6 +39,9 @@
       pointer-events: none;
     }
 
+    /* ===============================
+       🏷️ TITLE
+       =============================== */
     h1 {
       font-size: 3.0rem;
       color: #ffcc00;
@@ -44,6 +51,9 @@
       margin-bottom: 40px;
     }
 
+    /* ===============================
+       🔢 DIGIT FLIP DISPLAY
+       =============================== */
     .flip-container {
       display: flex;
       gap: 16px;
@@ -81,15 +91,18 @@
       transform: translateY(0);
     }
 
+    /* 💫 Small bounce effect for final digit reveal */
     @keyframes bounce {
       0% { transform: translateY(0); }
       30% { transform: translateY(-15%); }
       60% { transform: translateY(5%); }
       100% { transform: translateY(0); }
     }
-
     .bounce { animation: bounce 0.4s ease-out; }
 
+    /* ===============================
+       🏆 WINNER ANNOUNCEMENT
+       =============================== */
     .winner {
       font-size: 3.0rem;
       font-weight: 700;
@@ -111,12 +124,14 @@
       margin: 0 6px;
     }
 
+    /* 💡 Highlight the winner's name */
     .winner .highlight-name {
       color: #00ffcc;
       font-size: 4.0rem;
       font-weight: 900;
     }
 
+    /* 📝 Small text under winner name */
     .note {
       margin-top: 12px;
       font-size: 1.5rem;
@@ -124,6 +139,9 @@
       color: #ccc;
     }
 
+    /* ===============================
+       🖱️ BUTTON STYLING
+       =============================== */
     button {
       position: fixed;
       bottom: 40px;
@@ -153,37 +171,47 @@
   </style>
 </head>
 <body>
+  <!-- 🎥 Background looping video -->
   <video id="bg-video" autoplay muted loop playsinline>
     <source src="background.mp4" type="video/mp4">
   </video>
 
+  <!-- 💥 Canvas for the fireworks animation -->
   <canvas id="fireworks-container"></canvas>
 
+  <!-- 🏷️ Main title -->
   <h1>🎯 VÒNG QUAY SĐT MAY MẮN 🎯</h1>
 
+  <!-- 🔢 Number flip section for last 3 digits -->
   <div class="flip-container">
     <div class="digit-box"><div class="digit-inner" id="inner1"><div class="digit-item">-</div></div></div>
     <div class="digit-box"><div class="digit-inner" id="inner2"><div class="digit-item">-</div></div></div>
     <div class="digit-box"><div class="digit-inner" id="inner3"><div class="digit-item">-</div></div></div>
   </div>
 
+  <!-- 🏆 Winner announcement text -->
   <div id="winner" class="winner">
     <span id="part1">🎉 Chúc mừng Mẹ </span>
     <span id="part2" class="highlight-name"></span>
     <span id="part3"> đã trúng thưởng! 🎉</span>
   </div>
 
+  <!-- 📝 STT / note section -->
   <div id="note" class="note"></div>
 
+  <!-- 🎲 Main spin button -->
   <button id="spinBtn" onclick="spin()">BẮT ĐẦU QUAY</button>
 
   <script>
-    // ======== PHÁO HOA ========
-    let fireworksAnimationId; // <-- biến toàn cục để dừng animation
+    /* ==========================================================
+       🎆 FIREWORKS ANIMATION SYSTEM
+       (lighter version: fewer particles & reduced speed)
+       ========================================================== */
+    let fireworksAnimationId;
     let fireworks = [];
     let particles = [];
 
-    function showFireworks(durationMs = 10000) {
+    function showFireworks(durationMs = 8000) { // 🔧 slightly shorter duration
       const canvas = document.getElementById("fireworks-container");
       const ctx = canvas.getContext("2d");
       canvas.width = window.innerWidth;
@@ -197,17 +225,17 @@
         const startY = canvas.height + 10;
         const side = Math.random() < 0.5 ? 1 : -1;
         const angle = Math.PI / 2 + side * (Math.random() * Math.PI / 4);
-        const speed = 14 + Math.random() * 3 + (extra ? 4 : 0);
+        const speed = 11 + Math.random() * 2 + (extra ? 2 : 0); // 💫 slightly slower
         const color = colors[Math.floor(Math.random() * colors.length)];
         fireworks.push({ x: startX, y: startY, vx: Math.cos(angle) * speed, vy: -Math.abs(Math.sin(angle) * speed), color, exploded: false, alpha: 1, tail: [] });
       }
 
       function explode(x, y, color) {
-        const numParticles = 35 + Math.floor(Math.random() * 15);
+        const numParticles = 20 + Math.floor(Math.random() * 10);
         for (let i = 0; i < numParticles; i++) {
           const angle = (i / numParticles) * 2 * Math.PI;
-          const speed = 2 + Math.random() * 3;
-          particles.push({ x, y, vx: Math.cos(angle) * speed, vy: Math.sin(angle) * speed, color, alpha: 1, life: 80 + Math.random() * 40, radius: 1.5 + Math.random() * 1.5 });
+          const speed = 1.5 + Math.random() * 2;
+          particles.push({ x, y, vx: Math.cos(angle) * speed, vy: Math.sin(angle) * speed, color, alpha: 1, life: 80 + Math.random() * 40, radius: 1.3 + Math.random() * 1.2 });
         }
       }
 
@@ -220,18 +248,29 @@
           f.x += f.vx; f.y += f.vy; f.vy += 0.15; f.alpha -= 0.0045;
 
           ctx.globalCompositeOperation = "lighter";
-          ctx.strokeStyle = f.color; ctx.lineWidth = 2; ctx.beginPath();
+          ctx.strokeStyle = f.color; ctx.lineWidth = 2;
+          ctx.beginPath();
           for (let i = 0; i < f.tail.length - 1; i++) {
             ctx.globalAlpha = i / f.tail.length;
-            ctx.moveTo(f.tail[i].x, f.tail[i].y); ctx.lineTo(f.tail[i + 1].x, f.tail[i + 1].y);
+            ctx.moveTo(f.tail[i].x, f.tail[i].y);
+            ctx.lineTo(f.tail[i + 1].x, f.tail[i + 1].y);
           }
           ctx.stroke();
 
-          ctx.globalAlpha = f.alpha; ctx.fillStyle = f.color; ctx.shadowBlur = 6; ctx.shadowColor = f.color;
-          ctx.beginPath(); ctx.arc(f.x, f.y, 4, 0, 2 * Math.PI); ctx.fill();
-          ctx.shadowBlur = 0; ctx.globalCompositeOperation = "source-over";
+          ctx.globalAlpha = f.alpha;
+          ctx.fillStyle = f.color;
+          ctx.shadowBlur = 4; /* 🔧 reduced blur */
+          ctx.shadowColor = f.color;
+          ctx.beginPath();
+          ctx.arc(f.x, f.y, 3.5, 0, 2 * Math.PI);
+          ctx.fill();
+          ctx.shadowBlur = 0;
+          ctx.globalCompositeOperation = "source-over";
 
-          if (f.vy >= 0 && !f.exploded) { f.exploded = true; explode(f.x, f.y, f.color); }
+          if (f.vy >= 0 && !f.exploded) {
+            f.exploded = true;
+            explode(f.x, f.y, f.color);
+          }
         });
 
         for (let i = fireworks.length - 1; i >= 0; i--) {
@@ -240,9 +279,16 @@
 
         particles.forEach(p => {
           p.x += p.vx; p.y += p.vy; p.vy += 0.07; p.alpha -= 0.013; p.life -= 1;
-          ctx.globalCompositeOperation = "lighter"; ctx.globalAlpha = Math.max(p.alpha, 0); ctx.fillStyle = p.color;
-          ctx.shadowBlur = 4; ctx.shadowColor = p.color; ctx.beginPath(); ctx.arc(p.x, p.y, p.radius, 0, 2 * Math.PI); ctx.fill();
-          ctx.shadowBlur = 0; ctx.globalCompositeOperation = "source-over";
+          ctx.globalCompositeOperation = "lighter";
+          ctx.globalAlpha = Math.max(p.alpha, 0);
+          ctx.fillStyle = p.color;
+          ctx.shadowBlur = 2; /* 🔧 softer glow */
+          ctx.shadowColor = p.color;
+          ctx.beginPath();
+          ctx.arc(p.x, p.y, p.radius, 0, 2 * Math.PI);
+          ctx.fill();
+          ctx.shadowBlur = 0;
+          ctx.globalCompositeOperation = "source-over";
         });
 
         for (let i = particles.length - 1; i >= 0; i--) {
@@ -250,10 +296,10 @@
         }
 
         if (Date.now() < endTime || particles.length > 0 || fireworks.length > 0) {
-          if (Date.now() < endTime && Math.random() < 0.04) {
-            const burstCount = 3 + Math.floor(Math.random() * 2);
+          if (Date.now() < endTime && Math.random() < 0.035) { // 🎆 slightly fewer fireworks per frame
+            const burstCount = 2 + Math.floor(Math.random() * 2);
             for (let i = 0; i < burstCount; i++) spawnFirework();
-            if (Math.random() < 0.3) spawnFirework(true);
+            if (Math.random() < 0.25) spawnFirework(true);
           }
           fireworksAnimationId = requestAnimationFrame(animate);
         }
@@ -262,7 +308,10 @@
       animate();
     }
 
-    // ======== SLIDE SỐ & HIỂN THỊ WINNER ========
+    /* ==========================================================
+       🎰 SPIN LOGIC + DIGIT FLIP ANIMATION
+       (unchanged, just commented)
+       ========================================================== */
     async function slideOnce(innerEl, nextNum, durationMs = 80) {
       return new Promise(resolve => {
         const curr = innerEl.querySelector('.digit-item');
@@ -293,7 +342,6 @@
       setTimeout(()=>finalEl.classList.remove('bounce'),500);
     }
 
-    // ======== GỌI API SERVER /spin ========
     async function getSpinData() {
       try {
         const resp = await fetch('/spin');
@@ -314,17 +362,17 @@
       const canvas = document.getElementById("fireworks-container");
       const ctx = canvas.getContext("2d");
 
-      // --- DỪNG NGAY PHÁO HOA NẾU ĐANG CHẠY ---
+      // 🚫 Stop fireworks if running
       if (fireworksAnimationId) cancelAnimationFrame(fireworksAnimationId);
       fireworks = [];
       particles = [];
       ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-      // --- reset video về đầu ---
+      // 🔁 Restart background video
       video.currentTime = 0;
       video.play();
 
-      // --- reset hiển thị ---
+      // 🔄 Reset display
       ['part1','part2','part3'].forEach(id=>{
         const el=document.getElementById(id);
         el.style.opacity=0; el.style.transform='translateY(20px)';
