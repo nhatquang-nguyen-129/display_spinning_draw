@@ -39,6 +39,28 @@ function toTitleCase(str) {
     .join(" ");
 }
 
+// 🆕 🔧 Extract name part for Quick_Spin
+function getQuickSpinName(fullName) {
+  if (!fullName) return "";
+  const parts = fullName
+    .trim()
+    .toLowerCase()
+    .split(" ")
+    .filter(Boolean);
+  const n = parts.length;
+
+  if (n === 1) return toTitleCase(parts[0]);
+  if (n === 2) return toTitleCase(parts[1]);
+
+  if (n === 3) {
+    if (parts[1] === "thị") return toTitleCase(parts[2]);
+    else return toTitleCase(parts.slice(1).join(" "));
+  }
+
+  if (n >= 4) return toTitleCase(parts.slice(-2).join(" "));
+  return toTitleCase(parts.slice(-1)[0]);
+}
+
 // Temporary array to hold all rows
 const allRows = [];
 
@@ -79,12 +101,16 @@ fs.createReadStream(inputFile)
       const stt = String(i + 1).padStart(3, "0");
       const lastDigits = last3(r.phone);
       const nameTitleCase = toTitleCase(r.name);
+      const shortName = getQuickSpinName(r.name);
+      const quickSpin = `${stt} - ${shortName} - ${lastDigits}`; // ✅ Format mới
+
       return {
         STT: stt,
         Ho_Ten: nameTitleCase,
         So_Dien_Thoai: r.phone,
         Ba_So_Cuoi: lastDigits,
         Bai_Dang: r.url,
+        Quick_Spin: quickSpin, // 🆕 thêm trường mới
       };
     });
 
@@ -100,7 +126,9 @@ fs.createReadStream(inputFile)
     await csvWriter.writeRecords(finalData);
 
     // ✅ Print summary
-    console.log(`✅ Giữ lại ${finalData.length} người hợp lệ (đã loại ${duplicates.length} bản trùng).`);
+    console.log(
+      `✅ Giữ lại ${finalData.length} người hợp lệ (đã loại ${duplicates.length} bản trùng).`
+    );
     console.log(`📄 File output: ${outputFile}`);
 
     // 🔍 Print duplicates summary
