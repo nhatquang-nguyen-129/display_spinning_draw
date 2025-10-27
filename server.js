@@ -10,60 +10,52 @@ app.use(express.static("public"));
 
 const DEFAULT_PORT = process.env.PORT ? parseInt(process.env.PORT, 10) : 3000;
 
-function startServer(port) {
-  const server = app
-    .listen(port, () => {
-      console.log(`🎉 Server chạy tại: http://localhost:${port}`);
-    })
-    .on("error", (err) => {
-      if (err.code === "EADDRINUSE") {
-        console.warn(`⚠️ Port ${port} đã bị chiếm. Thử port ${port + 1}...`);
-        startServer(port + 1);
-      } else {
-        console.error("❌ Lỗi khởi động server:", err);
-      }
-    });
+// 🔹 Load CSV vào memory
+let participants = [];
+const filePath = "./data/participants_clean.csv";
+if (fs.existsSync(filePath)) {
+  fs.createReadStream(filePath)
+    .pipe(csv())
+    .on("data", row => participants.push(row))
+    .on("end", () => console.log("✅ CSV loaded:", participants.length));
 }
 
-/** 📜 Lấy toàn bộ danh sách (phục vụ hiệu ứng quay giả) */
-app.get("/participants", (req, res) => {
-  const results = [];
-  const filePath = "./data/participants_clean.csv";
-  if (!fs.existsSync(filePath)) return res.json([]);
+// 🔹 File lưu winners để loại trừ
+const winnersFile = "./data/winners.json";
+let winners = [];
+if (fs.existsSync(winnersFile)) {
+  winners = JSON.parse(fs.readFileSync(winnersFile, "utf-8"));
+}
 
-  fs.createReadStream(filePath)
-    .pipe(csv())
-    .on("data", (row) => {
-      results.push({
-        stt: row["STT"],
-        hoTen: row["Ho_Ten"],        // 👈 sửa thành Ho_Ten
-        baSoCuoi: row["Ba_So_Cuoi"],
-      });
-    })
-    .on("end", () => res.json(results));
-});
+function saveWinners() {
+  fs.writeFileSync(winnersFile, JSON.stringify(winners, null, 2));
+}
 
-/** 🎲 Quay thật — random 1 người hợp lệ */
 app.get("/spin", (req, res) => {
-  const results = [];
-  const filePath = "./data/participants_clean.csv";
-  if (!fs.existsSync(filePath)) {
-    return res.status(404).json({ error: "Không tìm thấy file dữ liệu!" });
-  }
+  const eligible = participants.filter(p => !winners.includes(p["STT"]));
 
-  fs.createReadStream(filePath)
-    .pipe(csv())
-    .on("data", (row) => results.push(row))
-    .on("end", () => {
-      if (!results.length) return res.json({ error: "Không có dữ liệu" });
-      const random = results[Math.floor(Math.random() * results.length)];
+  if (!eligible.length)
+    return res.status(404).json({ error: "Đã quay hết tất cả người tham gia!" });
 
-      res.json({
-        stt: random["STT"],
-        hoTen: random["Ho_Ten"],     // 👈 sửa thành Ho_Ten
-        baSoCuoi: random["Ba_So_Cuoi"],
-      });
-    });
+  const random = eligible[Math.floor(Math.random() * eligible.length)];
+
+  // 🔹 Thêm vào danh sách đã quay
+  winners.push(random["STT"]);
+  saveWinners();
+
+  res.json({
+    stt: random["STT"],
+    hoTen: random["Ho_Ten"],
+    baSoCuoi: random["Ba_So_Cuoi"],
+  });
 });
+
+function startServer(port) {
+  app.listen(port, () => console.log(`🎉 Server chạy tại: http://localhost:${port}`))
+     .on("error", err => {
+       if (err.code === "EADDRINUSE") startServer(port + 1);
+       else console.error(err);
+     });
+}
 
 startServer(DEFAULT_PORT);
