@@ -57,16 +57,15 @@
       margin-bottom: 40px;
     }
 
-    /* 🔧 Tăng thêm 10% nữa */
     .digit-box {
-      width: 189px;  /* 172 * 1.1 */
-      height: 253px; /* 230 * 1.1 */
+      width: 189px;
+      height: 253px;
       background: #fff;
       color: #000;
       display: flex;
       justify-content: center;
       align-items: center;
-      font-size: 10.56rem; /* 9.6rem * 1.1 */
+      font-size: 10.56rem;
       font-weight: 900;
       border-radius: 14px;
       box-shadow: 0 6px 22px rgba(0,0,0,0.5);
@@ -122,7 +121,6 @@
       font-weight: 900;
     }
 
-    /* 🔹 Note/STT to hơn và sát hơn */
     .note {
       margin-top: 6px;
       font-size: 3rem;
@@ -186,6 +184,7 @@
     let fireworksAnimationId = null;
     let fireworks = [];
     let particles = [];
+
     function showFireworks() {
       console.log("🎆 Fireworks disabled for test mode");
     }
@@ -264,7 +263,6 @@
       particles = [];
       ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-      // 🔹 Video chỉ chạy khi bấm quay
       video.currentTime = 0;
       video.play();
 
@@ -285,7 +283,7 @@
       const { stt, hoTen, baSoCuoi } = data;
       const arr = baSoCuoi.split('').map(c => c || '0');
 
-      const digitDurations = [800, 1200, 2000];
+      const digitDurations = [800, 2400, 3800];
 
       for(let i=0;i<arr.length;i++){
         await rollDigitSliding(innerEls[i], arr[i], digitDurations[i]);
@@ -299,7 +297,6 @@
         const part2 = document.getElementById('part2');
         const part3 = document.getElementById('part3');
 
-        // Hiện từng phần chữ chúc mừng
         part1.style.opacity = 1;
         part1.style.transform = 'translateY(0)';
 
@@ -313,7 +310,6 @@
           part3.style.opacity = 1;
           part3.style.transform = 'translateY(0)';
 
-          // 🔹 Hiển thị số thứ tự sau khi part3 xuất hiện xong
           noteDiv.innerText = `(Số thứ tự: ${stt})`;
           noteDiv.style.opacity = 0.95;
         }, 1000);
@@ -323,6 +319,16 @@
       btn.disabled=false;
       btn.innerText='QUAY LẠI';
     }
+
+    // 🔹 Bấm phím Enter để trigger quay
+    document.addEventListener('keydown', function(event) {
+      if (event.key === "Enter") {
+        const btn = document.getElementById('spinBtn');
+        if (!btn.disabled) {
+          btn.click();
+        }
+      }
+    });
   </script>
 </body>
 </html>
