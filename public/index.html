@@ -94,31 +94,36 @@
     }
     .bounce { animation: bounce 0.4s ease-out; }
 
+    /* 🎉 Phần hiển thị người trúng thưởng */
     .winner {
+      text-align: center;
+      margin-bottom: 10px;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+    }
+
+    .winner .line1 {
       font-size: 3.0rem;
       font-weight: 700;
       color: #ff9933;
       text-shadow: 0 0 16px #000;
-      display: flex;
-      justify-content: center;
-      align-items: baseline;
-      flex-wrap: wrap;
       margin-bottom: 10px;
+    }
+
+    .winner .line2 {
+      font-size: 4.0rem;
+      font-weight: 900;
+      color: #00ffcc;
+      text-shadow: 0 0 16px #000;
     }
 
     .winner span {
       opacity: 0;
       transform: translateY(20px);
       display: inline-block;
-      transition: opacity 0.6s ease, transform 0.6s ease, font-size 0.3s ease;
-      font-size: inherit;
-      margin: 0 6px;
-    }
-
-    .winner .highlight-name {
-      color: #00ffcc;
-      font-size: 4.0rem;
-      font-weight: 900;
+      transition: opacity 0.6s ease, transform 0.6s ease;
     }
 
     .note {
@@ -171,9 +176,12 @@
   </div>
 
   <div id="winner" class="winner">
-    <span id="part1">🎉 Chúc mừng Mẹ </span>
-    <span id="part2" class="highlight-name"></span>
-    <span id="part3"> đã trúng thưởng! 🎉</span>
+    <div class="line1">
+      <span id="part1">🎉 Chúc mừng Mẹ 🎉</span>
+    </div>
+    <div class="line2">
+      <span id="part2" class="highlight-name"></span>
+    </div>
   </div>
 
   <div id="note" class="note"></div>
@@ -186,7 +194,55 @@
     let particles = [];
 
     function showFireworks() {
-      console.log("🎆 Fireworks disabled for test mode");
+      const canvas = document.getElementById("fireworks-container");
+      const ctx = canvas.getContext("2d");
+      const W = canvas.width = window.innerWidth;
+      const H = canvas.height = window.innerHeight;
+
+      function random(min, max) {
+        return Math.random() * (max - min) + min;
+      }
+
+      function createFirework() {
+        const x = random(W * 0.2, W * 0.8);
+        const y = random(H * 0.2, H * 0.5);
+        const colors = ["#ff4b1f", "#1affd5", "#ffff66", "#ff00ff", "#00ffff"];
+        const color = colors[Math.floor(random(0, colors.length))];
+        for (let i = 0; i < 50; i++) {
+          particles.push({
+            x,
+            y,
+            vx: random(-5, 5),
+            vy: random(-5, 5),
+            life: random(40, 100),
+            color,
+          });
+        }
+      }
+
+      particles = [];
+      for (let i = 0; i < 6; i++) createFirework();
+
+      cancelAnimationFrame(fireworksAnimationId);
+
+      function animate() {
+        ctx.fillStyle = "rgba(0,0,0,0.15)";
+        ctx.fillRect(0, 0, W, H);
+        particles.forEach((p, i) => {
+          p.x += p.vx;
+          p.y += p.vy;
+          p.vy += 0.1; // gravity
+          p.life--;
+          ctx.beginPath();
+          ctx.fillStyle = p.color;
+          ctx.arc(p.x, p.y, 2, 0, 2 * Math.PI);
+          ctx.fill();
+          if (p.life <= 0) particles.splice(i, 1);
+        });
+        if (particles.length > 0) fireworksAnimationId = requestAnimationFrame(animate);
+      }
+
+      animate();
     }
 
     async function slideOnce(innerEl, nextNum, durationMs = 80) {
@@ -266,7 +322,7 @@
       video.currentTime = 0;
       video.play();
 
-      ['part1','part2','part3'].forEach(id=>{
+      ['part1','part2'].forEach(id=>{
         const el=document.getElementById(id);
         el.style.opacity=0;
         el.style.transform='translateY(20px)';
@@ -295,7 +351,6 @@
         showFireworks();
         const part1 = document.getElementById('part1');
         const part2 = document.getElementById('part2');
-        const part3 = document.getElementById('part3');
 
         part1.style.opacity = 1;
         part1.style.transform = 'translateY(0)';
@@ -304,15 +359,10 @@
           part2.textContent = hoTen;
           part2.style.opacity = 1;
           part2.style.transform = 'translateY(0)';
-        }, 500);
-
-        setTimeout(() => {
-          part3.style.opacity = 1;
-          part3.style.transform = 'translateY(0)';
 
           noteDiv.innerText = `(Số thứ tự: ${stt})`;
           noteDiv.style.opacity = 0.95;
-        }, 1000);
+        }, 600);
 
       }, 1000);
 
