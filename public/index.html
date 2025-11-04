@@ -17,8 +17,8 @@
       align-items: center;
     }
 
-    /* 🎥 Video nền */
-    #bg-video {
+    /* 🖼️ Hình nền */
+    #bg-image {
       position: fixed;
       top: 0;
       left: 0;
@@ -26,10 +26,21 @@
       height: 100%;
       object-fit: cover;
       z-index: -3;
-      opacity: 0.85;
+      opacity: 1;
+      animation: sway 10s ease-in-out infinite;
+      will-change: transform;
     }
 
-    /* 🌑 Lớp overlay làm tối video */
+    /* 🌊 Hiệu ứng đung đưa nhẹ */
+    @keyframes sway {
+      0% { transform: scale(1.02) translateY(0px) rotate(0deg); filter: brightness(1); }
+      25% { transform: scale(1.025) translateY(-4px) rotate(0.2deg); filter: brightness(1.02); }
+      50% { transform: scale(1.03) translateY(2px) rotate(-0.2deg); filter: brightness(1.03); }
+      75% { transform: scale(1.025) translateY(-3px) rotate(0.15deg); filter: brightness(1.02); }
+      100% { transform: scale(1.02) translateY(0px) rotate(0deg); filter: brightness(1); }
+    }
+
+    /* 🌑 Lớp phủ tối */
     #video-dim {
       position: fixed;
       top: 0;
@@ -37,7 +48,7 @@
       width: 100%;
       height: 100%;
       background: #000;
-      opacity: 0.35;
+      opacity: 0;
       z-index: -2;
       transition: opacity 1.2s ease-in-out;
     }
@@ -94,7 +105,6 @@
     }
     .bounce { animation: bounce 0.4s ease-out; }
 
-    /* 🎉 Phần hiển thị người trúng thưởng */
     .winner {
       text-align: center;
       margin-bottom: 10px;
@@ -105,7 +115,7 @@
     }
 
     .winner .line1 {
-      font-size: 3.0rem;
+      font-size: 4rem;
       font-weight: 700;
       color: #ff9933;
       text-shadow: 0 0 16px #000;
@@ -113,7 +123,7 @@
     }
 
     .winner .line2 {
-      font-size: 4.0rem;
+      font-size: 6rem;
       font-weight: 900;
       color: #00ffcc;
       text-shadow: 0 0 16px #000;
@@ -129,7 +139,7 @@
     .note {
       margin-top: 6px;
       font-size: 3rem;
-      opacity: 1.0;
+      opacity: 1;
       color: #ccc;
     }
 
@@ -147,7 +157,6 @@
       cursor: pointer;
       transition: 0.3s ease;
       display: inline-block;
-      width: auto;
     }
 
     button:hover:not(:disabled) {
@@ -159,15 +168,30 @@
       opacity: 0.6;
       cursor: not-allowed;
     }
-  </style>
+
+    /* 🪩 Logo góc trái */
+    #logo {
+      position: fixed;
+      top: 24px;
+      left: 24px;
+      width: 200px; /* to hơn 1.5 lần (nếu logo cũ ~100px) */
+      z-index: 1000;
+      pointer-events: none;
+      filter: drop-shadow(0 0 6px rgba(255,255,255,0.5));
+      overflow: hidden;
+    }
+
+</style>
 </head>
 <body>
-  <video id="bg-video" muted playsinline>
-    <source src="background.mp4" type="video/mp4">
-  </video>
-
+  <img id="bg-image" src="background.jpg" alt="background">
   <div id="video-dim"></div>
   <canvas id="fireworks-container"></canvas>
+
+  <!-- 🪩 Logo không bị dim -->
+  <div id="logo">
+    <img src="logo.png" alt="Logo" style="width:100%;height:auto;">
+  </div>
 
   <div class="flip-container">
     <div class="digit-box"><div class="digit-inner" id="inner1"><div class="digit-item">-</div></div></div>
@@ -176,75 +200,135 @@
   </div>
 
   <div id="winner" class="winner">
-    <div class="line1">
-      <span id="part1">🎉 Chúc mừng Mẹ 🎉</span>
-    </div>
-    <div class="line2">
-      <span id="part2" class="highlight-name"></span>
-    </div>
+    <div class="line1"><span id="part1">🎉 Chúc mừng Mẹ 🎉</span></div>
+    <div class="line2"><span id="part2" class="highlight-name"></span></div>
   </div>
 
   <div id="note" class="note"></div>
-
   <button id="spinBtn" onclick="spin()">BẮT ĐẦU QUAY</button>
 
   <script>
     let fireworksAnimationId = null;
-    let fireworks = [];
-    let particles = [];
 
+    /* 🎇 Pháo hoa 2 giai đoạn: bay lên rồi nổ */
     function showFireworks() {
       const canvas = document.getElementById("fireworks-container");
       const ctx = canvas.getContext("2d");
-      const W = canvas.width = window.innerWidth;
-      const H = canvas.height = window.innerHeight;
+      const W = (canvas.width = window.innerWidth);
+      const H = (canvas.height = window.innerHeight);
+
+      const colors = ["#ff4b1f", "#ffcc00", "#00ffff", "#ff00ff", "#ffffff"];
+      let rockets = [];
+      let particles = [];
 
       function random(min, max) {
         return Math.random() * (max - min) + min;
       }
 
-      function createFirework() {
-        const x = random(W * 0.2, W * 0.8);
-        const y = random(H * 0.2, H * 0.5);
-        const colors = ["#ff4b1f", "#1affd5", "#ffff66", "#ff00ff", "#00ffff"];
-        const color = colors[Math.floor(random(0, colors.length))];
-        for (let i = 0; i < 50; i++) {
-          particles.push({
-            x,
-            y,
-            vx: random(-5, 5),
-            vy: random(-5, 5),
-            life: random(40, 100),
-            color,
+      // 🧨 Bắn loạt 3–4 tia mỗi lần
+      function launchRockets() {
+        for (let i = 0; i < random(3, 5); i++) {
+          rockets.push({
+            x: random(W * 0.15, W * 0.85),
+            y: H,
+            vx: random(-1.2, 1.2),
+            vy: random(-16, -20),
+            color: colors[Math.floor(Math.random() * colors.length)],
+            exploded: false,
           });
         }
       }
 
-      particles = [];
-      for (let i = 0; i < 6; i++) createFirework();
+      // 🚀 Bắn trong 10 giây
+      const startTime = performance.now();
+      function launchLoop(time) {
+        if (time - startTime < 10000) {
+          launchRockets();
+          setTimeout(() => requestAnimationFrame(launchLoop), random(400, 800));
+        }
+      }
+      requestAnimationFrame(launchLoop);
 
-      cancelAnimationFrame(fireworksAnimationId);
-
-      function animate() {
-        ctx.fillStyle = "rgba(0,0,0,0.15)";
-        ctx.fillRect(0, 0, W, H);
-        particles.forEach((p, i) => {
-          p.x += p.vx;
-          p.y += p.vy;
-          p.vy += 0.1; // gravity
-          p.life--;
-          ctx.beginPath();
-          ctx.fillStyle = p.color;
-          ctx.arc(p.x, p.y, 2, 0, 2 * Math.PI);
-          ctx.fill();
-          if (p.life <= 0) particles.splice(i, 1);
-        });
-        if (particles.length > 0) fireworksAnimationId = requestAnimationFrame(animate);
+      // 🎆 Nổ thành các hạt nhỏ
+      function explode(rocket) {
+        const count = 70 + Math.floor(Math.random() * 50);
+        for (let i = 0; i < count; i++) {
+          const angle = Math.random() * 2 * Math.PI;
+          const speed = Math.random() * 5 + 1.5;
+          particles.push({
+            x: rocket.x,
+            y: rocket.y,
+            vx: Math.cos(angle) * speed,
+            vy: Math.sin(angle) * speed,
+            gravity: 0.12,
+            alpha: 1,
+            color: rocket.color,
+            size: random(0.8, 1.8),
+            life: random(80, 150),
+          });
+        }
       }
 
-      animate();
+      function animate() {
+        ctx.fillStyle = "rgba(0,0,0,0.2)";
+        ctx.fillRect(0, 0, W, H);
+
+        // Rocket bay lên
+        for (let i = rockets.length - 1; i >= 0; i--) {
+          const r = rockets[i];
+          r.x += r.vx;
+          r.y += r.vy;
+          r.vy += 0.25;
+
+          ctx.beginPath();
+          ctx.fillStyle = r.color;
+          ctx.arc(r.x, r.y, 2, 0, Math.PI * 2);
+          ctx.fill();
+
+          const grad = ctx.createLinearGradient(r.x, r.y, r.x, r.y + 15);
+          grad.addColorStop(0, r.color);
+          grad.addColorStop(1, "rgba(0,0,0,0)");
+          ctx.fillStyle = grad;
+          ctx.fillRect(r.x - 1, r.y, 2, 18);
+
+          if (r.vy >= -1 && !r.exploded) {
+            explode(r);
+            r.exploded = true;
+            rockets.splice(i, 1);
+          }
+          if (r.y > H || r.x < 0 || r.x > W) rockets.splice(i, 1);
+        }
+
+        // Hạt pháo
+        for (let i = particles.length - 1; i >= 0; i--) {
+          const p = particles[i];
+          p.x += p.vx;
+          p.y += p.vy;
+          p.vy += p.gravity;
+          p.alpha -= 0.012;
+          p.life--;
+
+          ctx.beginPath();
+          ctx.fillStyle = `${p.color}${Math.floor(p.alpha * 255)
+            .toString(16)
+            .padStart(2, "0")}`;
+          ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
+          ctx.fill();
+
+          if (p.life <= 0 || p.alpha <= 0) particles.splice(i, 1);
+        }
+
+        if (performance.now() - startTime < 11000 || rockets.length > 0 || particles.length > 0) {
+          fireworksAnimationId = requestAnimationFrame(animate);
+        } else {
+          cancelAnimationFrame(fireworksAnimationId);
+        }
+      }
+
+      fireworksAnimationId = requestAnimationFrame(animate);
     }
 
+    /* --- Quay số giữ nguyên --- */
     async function slideOnce(innerEl, nextNum, durationMs = 80) {
       return new Promise(resolve => {
         const curr = innerEl.querySelector('.digit-item');
@@ -273,8 +357,7 @@
     }
 
     async function rollDigitSliding(innerEl, finalNum, totalDuration = 3000) {
-      const initialDelay = 20;
-      const maxDelay = 280;
+      const initialDelay = 20, maxDelay = 280;
       const steps = Math.max(8, Math.floor(totalDuration / 80));
       for (let i = 0; i < steps; i++) {
         const progress = i / Math.max(1, steps - 1);
@@ -291,10 +374,8 @@
     async function getSpinData() {
       try {
         const resp = await fetch('/spin');
-        const data = await resp.json();
-        return data;
-      } catch(err) {
-        console.error("Lỗi lấy dữ liệu spin:", err);
+        return await resp.json();
+      } catch {
         return { stt: 999, hoTen: "Nguyễn Thị Lan", baSoCuoi: "123" };
       }
     }
@@ -303,24 +384,14 @@
       const btn = document.getElementById('spinBtn');
       const winnerDiv = document.getElementById('winner');
       const noteDiv = document.getElementById('note');
-      const innerEls = [
-        document.getElementById('inner1'),
-        document.getElementById('inner2'),
-        document.getElementById('inner3')
-      ];
+      const innerEls = [inner1, inner2, inner3];
       const dim = document.getElementById('video-dim');
-      const video = document.getElementById('bg-video');
       const canvas = document.getElementById("fireworks-container");
       const ctx = canvas.getContext("2d");
 
-      dim.style.opacity = 0.25;
-      if (fireworksAnimationId) cancelAnimationFrame(fireworksAnimationId);
-      fireworks = [];
-      particles = [];
+      dim.style.opacity = 0;
       ctx.clearRect(0, 0, canvas.width, canvas.height);
-
-      video.currentTime = 0;
-      video.play();
+      if (fireworksAnimationId) cancelAnimationFrame(fireworksAnimationId);
 
       ['part1','part2'].forEach(id=>{
         const el=document.getElementById(id);
@@ -332,51 +403,41 @@
 
       btn.disabled=true;
       btn.innerText='🎲 ĐANG QUAY...';
-      winnerDiv.style.opacity=1;
       innerEls.forEach(e=>e.innerHTML=`<div class="digit-item">-</div>`);
 
       const data = await getSpinData();
       const { stt, hoTen, baSoCuoi } = data;
       const arr = baSoCuoi.split('').map(c => c || '0');
-
-      const digitDurations = [800, 2400, 3800];
+      const durations = [800, 1400, 1800];
 
       for(let i=0;i<arr.length;i++){
-        await rollDigitSliding(innerEls[i], arr[i], digitDurations[i]);
+        await rollDigitSliding(innerEls[i], arr[i], durations[i]);
       }
 
       dim.style.opacity = 0.85;
-
       setTimeout(() => {
         showFireworks();
         const part1 = document.getElementById('part1');
         const part2 = document.getElementById('part2');
-
         part1.style.opacity = 1;
         part1.style.transform = 'translateY(0)';
-
         setTimeout(() => {
           part2.textContent = hoTen;
           part2.style.opacity = 1;
           part2.style.transform = 'translateY(0)';
-
           noteDiv.innerText = `(Số thứ tự: ${stt})`;
           noteDiv.style.opacity = 0.95;
         }, 600);
-
       }, 1000);
 
       btn.disabled=false;
       btn.innerText='QUAY LẠI';
     }
 
-    // 🔹 Bấm phím Enter để trigger quay
-    document.addEventListener('keydown', function(event) {
-      if (event.key === "Enter") {
+    document.addEventListener('keydown', e => {
+      if (e.key === "Enter") {
         const btn = document.getElementById('spinBtn');
-        if (!btn.disabled) {
-          btn.click();
-        }
+        if (!btn.disabled) btn.click();
       }
     });
   </script>
