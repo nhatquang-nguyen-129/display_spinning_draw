@@ -17,9 +17,20 @@ const fbPattern = /(facebook\.com|fb\.me)/i;
 // 🔧 Normalize phone number format
 function normalizePhone(phone) {
   if (!phone) return "";
-  let p = phone.toString().trim().replace(/\D/g, "");
-  if (p.startsWith("84")) p = "0" + p.slice(2);
+
+  // Xóa ký tự không phải số hoặc dấu +
+  let p = phone.toString().trim().replace(/[^\d+]/g, "");
+
+  // Chuẩn hóa đầu +84, 84, 840 → thành 0
+  if (p.startsWith("+84")) p = "0" + p.slice(3);
+  else if (p.startsWith("84")) p = "0" + p.slice(2);
+
+  // Nếu người nhập thiếu số 0 đầu
   if (p.length === 9 && !p.startsWith("0")) p = "0" + p;
+
+  // Chỉ chấp nhận số hợp lệ 10 chữ số, bắt đầu bằng 0
+  if (!/^0\d{9}$/.test(p)) return "";
+
   return p;
 }
 
