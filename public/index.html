@@ -273,7 +273,9 @@
         }
 
         function animate() {
-          ctx.fillStyle = "rgba(0,0,0,0.12)";
+          const age = (performance.now() - startTime) / 12000;
+          const fade = Math.min(0.55, 0.2 + age * 0.25);
+          ctx.fillStyle = `rgba(0,0,0,${fade.toFixed(2)})`;
           ctx.fillRect(0, 0, W, H);
 
           // 🚀 Rockets bay lên
@@ -342,6 +344,7 @@
             fireworksAnimationId = requestAnimationFrame(animate);
           } else {
             cancelAnimationFrame(fireworksAnimationId);
+            ctx.clearRect(0, 0, W, H);
           }
         }
 
