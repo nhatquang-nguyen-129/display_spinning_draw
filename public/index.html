@@ -1,61 +1,34 @@
 <!DOCTYPE html>
 <html lang="vi">
 <head>
-  <meta charset="UTF-8">
-  <title>🎯 Quay số may mắn 🎯</title>
+  <meta charset="UTF-8" />
+  <title>🎯 VÒNG QUAY MAY MẮN 🎯</title>
   <style>
     body {
       margin: 0;
       font-family: 'Segoe UI', sans-serif;
       background-color: #000;
-      color: #fff;
       overflow: hidden;
       height: 100vh;
       display: flex;
       flex-direction: column;
       justify-content: center;
       align-items: center;
+      color: #fff;
     }
 
-    /* 🖼️ Hình nền */
     #bg-image {
       position: fixed;
-      top: 0;
-      left: 0;
+      inset: 0;
       width: 100%;
       height: 100%;
       object-fit: cover;
-      z-index: -3;
-      opacity: 1;
+      z-index: -1;
       animation: sway 10s ease-in-out infinite;
-      will-change: transform;
     }
-
     @keyframes sway {
-      0% { transform: scale(1.02) translateY(0px) rotate(0deg); filter: brightness(1); }
-      25% { transform: scale(1.025) translateY(-4px) rotate(0.2deg); filter: brightness(1.02); }
-      50% { transform: scale(1.03) translateY(2px) rotate(-0.2deg); filter: brightness(1.03); }
-      75% { transform: scale(1.025) translateY(-3px) rotate(0.15deg); filter: brightness(1.02); }
-      100% { transform: scale(1.02) translateY(0px) rotate(0deg); filter: brightness(1); }
-    }
-
-    #video-dim {
-      position: fixed;
-      top: 0;
-      left: 0;
-      width: 100%;
-      height: 100%;
-      background: #000;
-      opacity: 0;
-      z-index: -2;
-      transition: opacity 1.2s ease-in-out;
-    }
-
-    #fireworks-container {
-      position: fixed;
-      inset: 0;
-      z-index: -2;
-      pointer-events: none;
+      0%, 100% { transform: scale(1.02); }
+      50% { transform: scale(1.03); }
     }
 
     .flip-container {
@@ -63,7 +36,7 @@
       gap: 16px;
       justify-content: center;
       align-items: center;
-      margin-bottom: 40px;
+      margin-top: 90px;
     }
 
     .digit-box {
@@ -77,18 +50,19 @@
       font-size: 10.56rem;
       font-weight: 900;
       border-radius: 14px;
-      box-shadow: 0 6px 22px rgba(0,0,0,0.5);
+      box-shadow: 0 6px 22px rgba(0, 0, 0, 0.5);
       position: relative;
       overflow: hidden;
     }
 
-    .digit-inner { position: absolute; inset: 0; overflow: hidden; }
-
+    .digit-inner {
+      position: absolute;
+      inset: 0;
+      overflow: hidden;
+    }
     .digit-item {
       position: absolute;
-      left: 0;
-      width: 100%;
-      height: 100%;
+      inset: 0;
       display: flex;
       align-items: center;
       justify-content: center;
@@ -103,44 +77,6 @@
     }
     .bounce { animation: bounce 0.4s ease-out; }
 
-    .winner {
-      text-align: center;
-      margin-bottom: 10px;
-      display: flex;
-      flex-direction: column;
-      justify-content: center;
-      align-items: center;
-    }
-
-    .winner .line1 {
-      font-size: 4rem;
-      font-weight: 700;
-      color: #ff9933;
-      text-shadow: 0 0 16px #000;
-      margin-bottom: 10px;
-    }
-
-    .winner .line2 {
-      font-size: 6rem;
-      font-weight: 900;
-      color: #00ffcc;
-      text-shadow: 0 0 16px #000;
-    }
-
-    .winner span {
-      opacity: 0;
-      transform: translateY(20px);
-      display: inline-block;
-      transition: opacity 0.6s ease, transform 0.6s ease;
-    }
-
-    .note {
-      margin-top: 6px;
-      font-size: 3rem;
-      opacity: 1;
-      color: #ccc;
-    }
-
     button {
       position: fixed;
       bottom: 40px;
@@ -154,227 +90,58 @@
       color: white;
       cursor: pointer;
       transition: 0.3s ease;
-      display: inline-block;
     }
-
     button:hover:not(:disabled) {
       background: #ff7f2a;
       transform: translateX(-50%) scale(1.08);
     }
-
     button:disabled {
       opacity: 0.6;
       cursor: not-allowed;
     }
-
-    #logo {
-      position: fixed;
-      top: 24px;
-      left: 24px;
-      width: 200px;
-      z-index: 1000;
-      pointer-events: none;
-      filter: drop-shadow(0 0 6px rgba(255,255,255,0.5));
-      overflow: hidden;
-    }
   </style>
 </head>
 <body>
-  <img id="bg-image" src="background.jpg" alt="background">
-  <div id="video-dim"></div>
-  <canvas id="fireworks-container"></canvas>
-
-  <div id="logo">
-    <img src="logo.png" alt="Logo" style="width:100%;height:auto;">
-  </div>
+  <img id="bg-image" src="background.png" alt="background" />
 
   <div class="flip-container">
-    <div class="digit-box"><div class="digit-inner" id="inner1"><div class="digit-item">-</div></div></div>
-    <div class="digit-box"><div class="digit-inner" id="inner2"><div class="digit-item">-</div></div></div>
-    <div class="digit-box"><div class="digit-inner" id="inner3"><div class="digit-item">-</div></div></div>
+    <div class="digit-box">
+      <div class="digit-inner" id="inner1"><div class="digit-item">-</div></div>
+    </div>
+    <div class="digit-box">
+      <div class="digit-inner" id="inner2"><div class="digit-item">-</div></div>
+    </div>
+    <div class="digit-box">
+      <div class="digit-inner" id="inner3"><div class="digit-item">-</div></div>
+    </div>
   </div>
 
-  <div id="winner" class="winner">
-    <div class="line1"><span id="part1">🎉 Chúc mừng Mẹ 🎉</span></div>
-    <div class="line2"><span id="part2" class="highlight-name"></span></div>
-  </div>
-
-  <div id="note" class="note"></div>
   <button id="spinBtn" onclick="spin()">BẮT ĐẦU QUAY</button>
 
   <script>
-    let fireworksAnimationId = null;
-
-      /* Code điều khiển pháo hoa */
-      function showFireworks() {
-        const canvas = document.getElementById("fireworks-container");
-        const ctx = canvas.getContext("2d");
-        const W = (canvas.width = window.innerWidth);
-        const H = (canvas.height = window.innerHeight);
-
-        const colors = ["#ff4b1f", "#ffcc00", "#00ffff", "#ff00ff", "#ffffff"];
-        let rockets = [];
-        let particles = [];
-
-        function random(min, max) {
-          return Math.random() * (max - min) + min;
-        }
-
-        function launchRockets() {
-          // 🚫 Giới hạn tổng rocket trên màn hình tối đa 4
-          if (rockets.length >= 4) return;
-
-          for (let i = 0; i < random(1, 2); i++) { // 👈 bắn 1–2 rocket mỗi đợt
-            rockets.push({
-              x: (() => {
-                let x;
-                do {
-                  x = random(W * 0.15, W * 0.85);
-                } while (x > W * 0.4 && x < W * 0.6); // tránh vùng Winner
-                return x;
-              })(),
-              y: H,
-              vx: random(-0.8, 0.8),
-              vy: random(-12, -15),
-              targetHeight: random(H * 0.20, H * 0.32),
-              color: colors[Math.floor(Math.random() * colors.length)],
-              exploded: false,
-            });
-          }
-        }
-
-        const startTime = performance.now();
-        function launchLoop(time) {
-          if (time - startTime < 10000) {
-            launchRockets();
-            setTimeout(() => requestAnimationFrame(launchLoop), random(900, 1200));
-          }
-        }
-        requestAnimationFrame(launchLoop);
-
-        function explode(rocket) {
-          const count = 50 + Math.floor(Math.random() * 40); // 👈 giảm còn ~2/3
-          for (let i = 0; i < count; i++) {
-            const angle = Math.random() * 2 * Math.PI;
-            const speed = Math.random() * 2.6 + 0.6;
-            particles.push({
-              x: rocket.x,
-              y: rocket.y,
-              vx: Math.cos(angle) * speed,
-              vy: Math.sin(angle) * speed,
-              gravity: 0.015,
-              alpha: 1,
-              fade: 0.002 + Math.random() * 0.0015,
-              color: rocket.color,
-              size: random(1.2, 2.4),
-              life: random(320, 460),
-            });
-          }
-        }
-
-        function animate() {
-          const age = (performance.now() - startTime) / 12000;
-          const fade = Math.min(0.55, 0.2 + age * 0.25);
-          ctx.fillStyle = `rgba(0,0,0,${fade.toFixed(2)})`;
-          ctx.fillRect(0, 0, W, H);
-
-          // 🚀 Rockets bay lên
-          for (let i = rockets.length - 1; i >= 0; i--) {
-            const r = rockets[i];
-            r.x += r.vx;
-            r.y += r.vy;
-            r.vy += 0.12;
-
-            ctx.beginPath();
-            ctx.fillStyle = r.color;
-            ctx.arc(r.x, r.y, 2.5, 0, Math.PI * 2);
-            ctx.fill();
-
-            const grad = ctx.createLinearGradient(r.x, r.y, r.x, r.y + 20);
-            grad.addColorStop(0, r.color);
-            grad.addColorStop(1, "rgba(0,0,0,0)");
-            ctx.fillStyle = grad;
-            ctx.fillRect(r.x - 1, r.y, 2, 20);
-
-            // 🎯 Nổ đúng vùng targetHeight hoặc khi bắt đầu rơi xuống
-            if (!r.exploded && (r.y <= r.targetHeight || r.vy >= 0)) {
-              explode(r);
-              r.exploded = true;
-              rockets.splice(i, 1);
-            }
-
-            if (r.y > H || r.x < 0 || r.x > W) rockets.splice(i, 1);
-          }
-
-          // 🌠 Particles sau khi nổ
-          for (let i = particles.length - 1; i >= 0; i--) {
-            const p = particles[i];
-            p.x += p.vx;
-            p.y += p.vy;
-            p.vy += p.gravity;
-            p.alpha -= p.fade;
-            p.life--;
-
-            // Glow tối giản
-            ctx.beginPath();
-            ctx.fillStyle = `${p.color}${Math.floor(p.alpha * 200)
-              .toString(16)
-              .padStart(2, "0")}`;
-            ctx.arc(p.x, p.y, p.size * 1.5, 0, Math.PI * 2);
-            ctx.fill();
-
-            // Đuôi sáng mềm
-            ctx.beginPath();
-            ctx.strokeStyle = `${p.color}${Math.floor(p.alpha * 180)
-              .toString(16)
-              .padStart(2, "0")}`;
-            ctx.lineWidth = 1;
-            ctx.moveTo(p.x, p.y);
-            ctx.lineTo(p.x - p.vx * 3, p.y - p.vy * 3);
-            ctx.stroke();
-
-            if (p.life <= 0 || p.alpha <= 0) particles.splice(i, 1);
-          }
-
-          if (
-            performance.now() - startTime < 11500 ||
-            rockets.length > 0 ||
-            particles.length > 0
-          ) {
-            fireworksAnimationId = requestAnimationFrame(animate);
-          } else {
-            cancelAnimationFrame(fireworksAnimationId);
-            ctx.clearRect(0, 0, W, H);
-          }
-        }
-
-        fireworksAnimationId = requestAnimationFrame(animate);
-      }
-
-    /* --- Logic quay số --- */
     async function slideOnce(innerEl, nextNum, durationMs = 80) {
-      return new Promise(resolve => {
-        const curr = innerEl.querySelector('.digit-item');
-        const next = document.createElement('div');
-        next.className = 'digit-item';
+      return new Promise((resolve) => {
+        const curr = innerEl.querySelector(".digit-item");
+        const next = document.createElement("div");
+        next.className = "digit-item";
         next.textContent = nextNum;
-        next.style.transform = 'translateY(-100%)';
+        next.style.transform = "translateY(-100%)";
         const ms = Math.max(40, Math.min(400, Math.round(durationMs)));
         curr.style.transition = `transform ${ms}ms linear`;
         next.style.transition = `transform ${ms}ms linear`;
         innerEl.appendChild(next);
         next.getBoundingClientRect();
         requestAnimationFrame(() => {
-          curr.style.transform = 'translateY(100%)';
-          next.style.transform = 'translateY(0)';
+          curr.style.transform = "translateY(100%)";
+          next.style.transform = "translateY(0)";
         });
         const cleanup = () => {
           innerEl.removeChild(curr);
-          next.style.transition='';
-          next.style.transform='';
+          next.style.transition = "";
+          next.style.transform = "";
           resolve(next);
         };
-        next.addEventListener('transitionend', cleanup, { once: true });
+        next.addEventListener("transitionend", cleanup, { once: true });
         setTimeout(cleanup, ms + 50);
       });
     }
@@ -390,76 +157,39 @@
         await slideOnce(innerEl, rnd, delay);
       }
       const finalEl = await slideOnce(innerEl, finalNum, Math.min(maxDelay, 450));
-      finalEl.classList.add('bounce');
-      setTimeout(()=>finalEl.classList.remove('bounce'),500);
+      finalEl.classList.add("bounce");
+      setTimeout(() => finalEl.classList.remove("bounce"), 500);
     }
 
-    async function getSpinData() {
-      try {
-        const resp = await fetch('/spin');
-        return await resp.json();
-      } catch {
-        return { stt: 999, hoTen: "Nguyễn Thị Lan", baSoCuoi: "123" };
-      }
+    function getRandomNumberString() {
+      const num = Math.floor(Math.random() * 500) + 1;
+      return num.toString().padStart(3, "0");
     }
 
     async function spin() {
-      const btn = document.getElementById('spinBtn');
-      const winnerDiv = document.getElementById('winner');
-      const noteDiv = document.getElementById('note');
+      const btn = document.getElementById("spinBtn");
       const innerEls = [inner1, inner2, inner3];
-      const dim = document.getElementById('video-dim');
-      const canvas = document.getElementById("fireworks-container");
-      const ctx = canvas.getContext("2d");
+      const body = document.body;
 
-      dim.style.opacity = 0;
-      ctx.clearRect(0, 0, canvas.width, canvas.height);
-      if (fireworksAnimationId) cancelAnimationFrame(fireworksAnimationId);
+      btn.disabled = true;
+      btn.innerText = "🎲 ĐANG QUAY...";
+      innerEls.forEach((e) => (e.innerHTML = `<div class="digit-item">-</div>`));
 
-      ['part1','part2'].forEach(id=>{
-        const el=document.getElementById(id);
-        el.style.opacity=0;
-        el.style.transform='translateY(20px)';
-      });
-      noteDiv.style.opacity=0;
-      noteDiv.innerText='';
-
-      btn.disabled=true;
-      btn.innerText='🎲 ĐANG QUAY...';
-      innerEls.forEach(e=>e.innerHTML=`<div class="digit-item">-</div>`);
-
-      const data = await getSpinData();
-      const { stt, hoTen, baSoCuoi } = data;
-      const arr = baSoCuoi.split('').map(c => c || '0');
+      const digits = getRandomNumberString().split("");
       const durations = [800, 1400, 1800];
+      for (let i = 0; i < digits.length; i++)
+        await rollDigitSliding(innerEls[i], digits[i], durations[i]);
 
-      for(let i=0;i<arr.length;i++){
-        await rollDigitSliding(innerEls[i], arr[i], durations[i]);
-      }
+      // Sau khi quay xong, làm đen màn hình
+      body.style.backgroundColor = "#000";
 
-      dim.style.opacity = 0.85;
-      setTimeout(() => {
-        showFireworks();
-        const part1 = document.getElementById('part1');
-        const part2 = document.getElementById('part2');
-        part1.style.opacity = 1;
-        part1.style.transform = 'translateY(0)';
-        setTimeout(() => {
-          part2.textContent = hoTen;
-          part2.style.opacity = 1;
-          part2.style.transform = 'translateY(0)';
-          noteDiv.innerText = `(Số thứ tự: ${stt})`;
-          noteDiv.style.opacity = 0.95;
-        }, 1000);
-      }, 500);
-
-      btn.disabled=false;
-      btn.innerText='QUAY LẠI';
+      btn.disabled = false;
+      btn.innerText = "QUAY LẠI";
     }
 
-    document.addEventListener('keydown', e => {
+    document.addEventListener("keydown", (e) => {
       if (e.key === "Enter") {
-        const btn = document.getElementById('spinBtn');
+        const btn = document.getElementById("spinBtn");
         if (!btn.disabled) btn.click();
       }
     });
