@@ -1,124 +1,90 @@
-import { highlightDuplicates } from '../modules/preprocessing.js';
+// === Screens (HTML Templates) ===
+const screens = {
+  start: `
+    <div id="startScreen" class="screen active fade-in">
+      <div class="start-text">Press any button to start...</div>
+    </div>
+  `,
 
-const openFileBtn = document.getElementById('openFileBtn');
-const fileInput = document.getElementById('fileInput');
-const dataTable = document.getElementById('dataTable');
-const fileTypeSelect = document.getElementById('fileFormat');
+  loading: `
+    <div id="loadingScreen" class="screen active fade-in">
+      <div id="progressContainer">
+        <div id="progressBar"></div>
+        <span id="loadingText">LOADING</span>
+      </div>
+    </div>
+  `,
 
-// Khi click nút Open File
-openFileBtn.addEventListener('click', () => {
-  const type = fileTypeSelect.value;
-  fileInput.accept = type === 'csv'
-    ? '.csv,text/csv'
-    : '.xlsx,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet';
-  fileInput.value = ''; // reset nếu chọn lại file cũ
-  fileInput.click();
-});
+  select: `
+    <div id="selectScreen" class="screen active fade-in">
+      <h2>Chọn hoặc tạo dự án</h2>
+      <button id="btnStartProcess">Bắt đầu xử lý</button>
+    </div>
+  `
+};
 
-// Khi chọn file
-fileInput.addEventListener('change', (event) => {
-  const file = event.target.files[0];
-  if (!file) return;
+// === Hiển thị một màn hình với hiệu ứng fade ===
+function showScreen(name) {
+  const app = document.getElementById('app');
+  const oldScreen = app.querySelector('.screen');
 
-  const type = fileTypeSelect.value;
-  const fileName = file.name.toLowerCase();
-
-  if ((type === 'csv' && !fileName.endsWith('.csv')) ||
-      (type === 'xlsx' && !fileName.endsWith('.xlsx'))) {
-    alert(`Wrong file type! Please select a ${type.toUpperCase()} file.`);
-    return;
+  if (oldScreen) {
+    oldScreen.classList.add('fade-out');
+    setTimeout(() => {
+      app.innerHTML = screens[name];
+      const newScreen = app.querySelector('.screen');
+      newScreen.classList.add('fade-in');
+    }, 400); // thời gian trùng với CSS fade-out
+  } else {
+    app.innerHTML = screens[name];
   }
-
-  if (type === 'csv') {
-    const reader = new FileReader();
-    reader.onload = (e) => displayCSV(e.target.result);
-    reader.readAsText(file);
-  }
-
-  if (type === 'xlsx') {
-    const reader = new FileReader();
-    reader.onload = (e) => {
-      const data = new Uint8Array(e.target.result);
-      const workbook = XLSX.read(data, { type: 'array' });
-      const firstSheet = workbook.SheetNames[0];
-      const worksheet = workbook.Sheets[firstSheet];
-      const jsonData = XLSX.utils.sheet_to_json(worksheet, { defval: '' });
-      displayJSON(jsonData);
-    };
-    reader.readAsArrayBuffer(file);
-  }
-});
-
-// CSV -> table
-function displayCSV(csvText) {
-  const rows = csvText.split('\n').map(r => r.split(','));
-  renderTableFromRows(rows);
 }
 
-// JSON array -> table
-function displayJSON(data) {
-  if (!data || data.length === 0) return;
-  const headers = Object.keys(data[0]);
-  const rows = [headers, ...data.map(row => headers.map(h => row[h]))];
-  renderTableFromRows(rows);
+// === InitAPP ===
+function initApp() {
+  showScreen('start');
+
+  const app = document.getElementById('app');
+
+  function startHandler() {
+    document.removeEventListener('keydown', startHandler);
+    app.removeEventListener('click', startHandler);
+
+    // Sang màn loading
+    showScreen('loading');
+    setTimeout(startLoading, 500);
+  }
+
+  document.addEventListener('keydown', startHandler);
+  app.addEventListener('click', startHandler);
 }
 
-// Render table
-function renderTableFromRows(rows) {
-  dataTable.innerHTML = '';
-  if (rows.length === 0) return;
+// === Loading progress 3s ===
+function startLoading() {
+  const bar = document.getElementById('progressBar');
+  let width = 0;
+  const duration = 3000;
+  const intervalTime = 30;
+  const step = 100 / (duration / intervalTime);
 
-  const thead = document.createElement('thead');
-  const trHead = document.createElement('tr');
+  const interval = setInterval(() => {
+    width += step;
+    if (width >= 100) {
+      width = 100;
+      clearInterval(interval);
+      setTimeout(showSelectScreen, 300);
+    }
+    bar.style.width = width + '%';
+  }, intervalTime);
+}
 
-  rows[0].forEach((h, idx) => {
-    const th = document.createElement('th');
-    const checkbox = document.createElement('input');
-    checkbox.type = 'checkbox';
-    checkbox.value = idx;
-    checkbox.classList.add('col-selector');
-    th.appendChild(checkbox);
-    const span = document.createElement('span');
-    span.textContent = ` ${h}`;
-    th.appendChild(span);
-    trHead.appendChild(th);
+// === Màn hình chọn dự án ===
+function showSelectScreen() {
+  showScreen('select');
+  document.getElementById('btnStartProcess').addEventListener('click', () => {
+    alert('Bắt đầu xử lý dự án... (sẽ gọi API backend)');
   });
-
-  thead.appendChild(trHead);
-  dataTable.appendChild(thead);
-
-  const tbody = document.createElement('tbody');
-  rows.slice(1).forEach(row => {
-    const tr = document.createElement('tr');
-    row.forEach(cell => {
-      const td = document.createElement('td');
-      td.textContent = cell;
-      tr.appendChild(td);
-    });
-    tbody.appendChild(tr);
-  });
-  dataTable.appendChild(tbody);
-
-  attachDuplicateButton();
 }
 
-// Nút Show Duplicate
-function attachDuplicateButton() {
-  let btn = document.getElementById('showDupBtn');
-  if (!btn) {
-    btn = document.createElement('button');
-    btn.id = 'showDupBtn';
-    btn.textContent = 'Show Duplicate';
-    dataTable.parentNode.insertBefore(btn, dataTable);
-
-    btn.addEventListener('click', () => {
-      const checkedCols = Array.from(document.querySelectorAll('.col-selector:checked'))
-                               .map(cb => parseInt(cb.value));
-      if (checkedCols.length === 0) {
-        alert('Please select at least one column to check duplicates!');
-        return;
-      }
-      highlightDuplicates(dataTable, checkedCols);
-    });
-  }
-}
+// === Chạy ứng dụng ===
+initApp();
