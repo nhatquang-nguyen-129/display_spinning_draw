@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Startup - Chọn dự án</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <!-- Logo góc trên trái -->
+    <img src="./UpperLeftLogo.png" alt="Logo" class="logo">
+  
+    <!-- Chọn dự án -->
+    <div class="startup-container">
+    <h1>Chọn dự án</h1>
+    <select id="projectSelect">
+      <option value="" disabled selected>-- Chọn dự án --</option>
+      <option value="projectA">Dự án A</option>
+      <option value="projectB">Dự án B</option>
+      <option value="projectC">Dự án C</option>
+    </select>
+    <button id="openProjectBtn">Mở dự án</button>
+  </div>
+
+  <script>
+    const projectSelect = document.getElementById('projectSelect');
+    const openProjectBtn = document.getElementById('openProjectBtn');
+
+    openProjectBtn.addEventListener('click', () => {
+      const selectedProject = projectSelect.value;
+      if (!selectedProject) {
+        alert('Vui lòng chọn một dự án!');
+        return;
+      }
+      localStorage.setItem('currentProject', selectedProject);
+      alert(`Đang mở dự án: ${selectedProject}`);
+      // window.location.href = 'main.html'; // khi deploy
+    });
+  </script>
+</body>
+</html>

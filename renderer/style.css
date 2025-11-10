@@ -1,0 +1,38 @@
+body {
+  font-family: Arial, sans-serif;
+  padding: 20px;
+}
+
+h1 {
+  text-align: center;
+}
+
+section {
+  margin-bottom: 20px;
+}
+
+button {
+  padding: 6px 12px;
+  margin-left: 10px;
+  cursor: pointer;
+}
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 10px;
+}
+
+th, td {
+  border: 1px solid #ccc;
+  padding: 6px 10px;
+  text-align: left;
+}
+
+thead {
+  background-color: #f0f0f0;
+}
+
+tr.duplicate {
+  background-color: yellow;
+}

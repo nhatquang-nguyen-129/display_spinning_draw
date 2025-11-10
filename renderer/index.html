@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Data Preview with Duplicate Check</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+
+  <div id="loader-section">
+    <h3>Load Data File</h3>
+
+    <label for="fileTypeSelect">File format:</label>
+    <select id="fileTypeSelect">
+      <option value="csv">CSV</option>
+      <option value="xlsx">Excel (.xlsx)</option>
+    </select>
+
+    <button id="openFileBtn">Open File</button>
+    <input type="file" id="fileInput" style="display:none" />
+  </div>
+
+  <div id="preview-section">
+    <h3>Data Preview</h3>
+    <div id="dataTable"></div>
+  </div>
+
+  <script type="module" src="renderer/app.js"></script>
+</body>
+</html>
