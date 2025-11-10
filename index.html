@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<title>production - KIDSPLAZA LUCKY DRAW</title>
+<style>
+  .screen { display: none; text-align: center; margin-top: 100px; }
+  .active { display: block; }
+
+  /* Start screen */
+  #startScreen h2 {
+    font-size: 24px;
+    animation: blink 1s step-start infinite;
+  }
+
+  @keyframes blink {
+    50% { opacity: 0; }
+  }
+
+  /* Progress bar */
+  #progressContainer {
+    width: 80%;
+    height: 20px;
+    background-color: #f3f3f3;
+    margin: 40px auto 0 auto;
+    border-radius: 10px;
+    overflow: hidden;
+    display: none;
+  }
+
+  #progressBar {
+    height: 100%;
+    width: 0%;
+    background-color: #3498db;
+    border-radius: 10px;
+  }
+
+  button {
+    padding: 10px 20px;
+    font-size: 16px;
+    cursor: pointer;
+  }
+</style>
+</head>
+<body>
+
+<!-- Start Screen -->
+<div id="startScreen" class="screen active">
+  <h2 id="pressText">Press any button to start...</h2>
+  <div id="progressContainer">
+    <div id="progressBar"></div>
+  </div>
+</div>
+
+<!-- Select/Create Project Screen -->
+<div id="select" class="screen">
+  <h2>Chọn hoặc tạo dự án</h2>
+  <button onclick="showScreen('process')">Bắt đầu xử lý</button>
+</div>
+
+<script>
+function showScreen(screenId) {
+  document.querySelectorAll('.screen').forEach(div => div.classList.remove('active'));
+  document.getElementById(screenId).classList.add('active');
+}
+
+// Bắt sự kiện click hoặc keypress để bắt đầu
+const startScreen = document.getElementById('startScreen');
+const pressText = document.getElementById('pressText');
+const progressContainer = document.getElementById('progressContainer');
+const progressBar = document.getElementById('progressBar');
+
+function startApp() {
+  // Ẩn chữ nhấp nháy
+  pressText.style.display = 'none';
+  // Hiện progress bar
+  progressContainer.style.display = 'block';
+
+  // Loại bỏ listener
+  document.removeEventListener('keydown', startApp);
+  startScreen.removeEventListener('click', startApp);
+
+  // Chạy progress bar 3 giây
+  let width = 0;
+  const interval = setInterval(() => {
+    width += 1; // 1% mỗi 30ms → ~3 giây
+    progressBar.style.width = width + '%';
+    if (width >= 100) {
+      clearInterval(interval);
+      showScreen('select');
+    }
+  }, 30);
+}
+
+// Khi người dùng nhấn bất kỳ nút nào hoặc click vào màn hình start
+document.addEventListener('keydown', startApp);
+startScreen.addEventListener('click', startApp);
+</script>
+
+</body>
+</html>
